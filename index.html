@@ -12,15 +12,23 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ess2292.github.io/envgate/" />
   <meta property="og:site_name" content="EnvGate" />
-  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="EnvGate — CI-friendly env checker" />
   <link rel="canonical" href="https://ess2292.github.io/envgate/" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="EnvGate — CI-Friendly Env Checker for Missing Keys, Placeholders &amp; Secret Shapes" />
   <meta name="twitter:description" content="Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values." />
-  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta name="twitter:image:alt" content="EnvGate — CI-friendly env checker" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"EnvGate","applicationCategory":"DeveloperApplication","operatingSystem":"Node.js 18+","offers":{"@type":"Offer","price":"19","priceCurrency":"USD"},"description":"A zero-dependency Node.js CLI that checks an environment file against .env.example for missing keys, placeholders, extra keys, and high-confidence secret shapes, without printing values.","author":{"@type":"Person","name":"Emilio Straubel"},"url":"https://ess2292.github.io/envgate/"}</script>
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="og-image.svg" type="image/svg+xml" />
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -36,8 +44,9 @@
         <li><a href="#ci">CI</a></li>
         <li><a href="#limits">Limits</a></li>
         <li><a href="#pricing">Pricing</a></li>
-        <li><a href="#faq">FAQ</a></li>
         <li><a href="guides/index.html">Guides</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="https://github.com/ESS2292/envgate-action">Lite Action</a></li>
       </ul>
     </nav>
 
@@ -72,7 +81,7 @@
         <button type="button" id="buy-btn" class="buy-btn" disabled data-checkout-url="">Checkout coming soon</button>
         <p class="buy-note">Checkout is not live yet. Payments will be processed by Lemon Squeezy when the store opens.</p>
         <div class="art" aria-hidden="true">
-          <svg class="art-svg" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stylized EnvGate gate graphic">
+          <svg class="art-svg" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#38bdf8" stop-opacity=".9"/>
@@ -144,7 +153,7 @@ node bin/envgate.js check --env .env --example .env.example</pre>
 
       <section id="demo">
         <h2>Real demo output</h2>
-        <p class="note" style="margin-top:0">These are recorded runs against the package examples and the Action entrypoint. Demo values are synthetic. Secret values are never printed.</p>
+        <p class="note">These are recorded runs against the package examples and the Action entrypoint. Demo values are synthetic. Secret values are never printed.</p>
 
         <figure class="demo-rec">
           <video autoplay loop muted playsinline controls poster="demos/envgate-demo.gif" width="960" height="540">
@@ -155,7 +164,7 @@ node bin/envgate.js check --env .env --example .env.example</pre>
         </figure>
 
         <div class="grid-2">
-          <div class="terminal" aria-label="Clean EnvGate run">
+          <div class="terminal">
             <div class="bar">
               <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
               <span class="bar-cmd">node bin/envgate.js check --env examples/clean.env --example examples/clean.env.example</span>
@@ -168,7 +177,7 @@ node bin/envgate.js check --env .env --example .env.example</pre>
 exit:0</pre>
           </div>
 
-          <div class="terminal" aria-label="EnvGate run with an extra-key warning">
+          <div class="terminal">
             <div class="bar">
               <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
               <span class="bar-cmd">node bin/envgate.js check --env examples/.env --example examples/.env.example</span>
@@ -186,7 +195,7 @@ exit:0</pre>
           </div>
         </div>
 
-        <div class="terminal" aria-label="Failing EnvGate run">
+        <div class="terminal">
           <div class="bar">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
             <span class="bar-cmd">node bin/envgate.js check --env examples/failing.env --example examples/.env.example</span>
@@ -217,7 +226,7 @@ exit:1</pre>
 
       <section id="ci">
         <h2>GitHub Actions example</h2>
-        <p class="note" style="margin-top:0">
+        <p class="note">
           From the bundled workflow sketch. Provide <code>.env</code> in CI from secrets/vars — do not commit real secrets.
           EnvGate only reads the env/example paths you pass — it does <strong>not</strong> scan the whole repository.
           The example pins Node 22 because Node 20 reached official end of support on 30 April 2026.
@@ -226,7 +235,7 @@ exit:1</pre>
           To fail the job when mixed lockfiles are committed or CI runs <code>npm install</code> instead of a frozen install, use the free
           <a href="https://github.com/ESS2292/lockgate-action">LockGate Lite Action</a>.
         </p>
-        <div class="terminal" aria-label="Sample GitHub Actions workflow">
+        <div class="terminal">
           <div class="bar">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
             <span class="bar-cmd">.github/workflows/envgate-example.yml</span>
@@ -277,7 +286,7 @@ jobs:
 
       <section id="limits">
         <h2>Honest limits</h2>
-        <p class="note" style="margin-top:0">
+        <p class="note">
           Honest limits: EnvGate is a <strong>gate/check</strong>, not a security guarantee.
           It does not scan your whole repo or git history, does not implement <code>--schema</code>, and does not replace a dedicated secrets scanner.
         </p>
@@ -309,7 +318,7 @@ jobs:
 
       <section id="buy">
         <h2>Price, license, support &amp; refunds</h2>
-        <p class="note" style="margin-top:0">
+        <p class="note">
           <strong>$19 USD</strong>, one-time purchase. No subscription.
         </p>
         <p class="note">
@@ -431,7 +440,13 @@ jobs:
     </main>
 
     <footer>
-      <div class="footer-row">
+      <nav class="family-nav" aria-label="Other tools in this family">
+        <span class="family-label">Also:</span>
+          <a href="https://ess2292.github.io/envgate/" aria-current="page">EnvGate</a>
+          <a href="https://ess2292.github.io/runtimegate/">RuntimeGate</a>
+          <a href="https://ess2292.github.io/lockgate/">LockGate</a>
+      </nav>
+<div class="footer-row">
         <div>
           EnvGate 0.1.0 by Emilio Straubel · $19 one-time · MIT source included · no tracking, no fabricated testimonials or sales counts
         </div>
@@ -440,6 +455,8 @@ jobs:
           <a href="guides/index.html">Guides</a>
           <a href="privacy.html">Privacy</a>
           <a href="terms.html">Terms</a>
+          <a href="https://github.com/ESS2292/envgate-action">Lite Action</a>
+          <a href="https://github.com/ESS2292/envgate-action/issues">Issues</a>
         </div>
       </div>
     </footer>

@@ -13,15 +13,23 @@
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://ess2292.github.io/envgate/guides/dotenv-vs-env-example.html" />
   <meta property="og:site_name" content="EnvGate" />
-  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="EnvGate — CI-friendly env checker" />
   <meta property="article:published_time" content="2026-11-10" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="dotenv vs .env.example: Keeping Config in Sync — EnvGate Guides" />
   <meta name="twitter:description" content="What dotenv does, what .env.example is for, how the two drift apart, and practical ways to keep them in sync at startup, in git hooks, and in CI." />
-  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta name="twitter:image:alt" content="EnvGate — CI-friendly env checker" />
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
-  <link rel="icon" href="../og-image.svg" type="image/svg+xml" />
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "dotenv vs .env.example: keeping config in sync", "description": "What dotenv does, what .env.example is for, how the two drift apart, and practical ways to keep them in sync at startup, in git hooks, and in CI.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-10", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/dotenv-vs-env-example.html"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "dotenv vs .env.example: keeping config in sync", "description": "What dotenv does, what .env.example is for, how the two drift apart, and practical ways to keep them in sync at startup, in git hooks, and in CI.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-10", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/dotenv-vs-env-example.html"}</script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -33,9 +41,13 @@
       </a>
       <ul class="nav-links">
         <li><a href="../index.html#checks">What it checks</a></li>
+        <li><a href="../index.html#demo">Demo</a></li>
+        <li><a href="../index.html#ci">CI</a></li>
+        <li><a href="../index.html#limits">Limits</a></li>
         <li><a href="../index.html#pricing">Pricing</a></li>
         <li><a href="index.html" aria-current="page">Guides</a></li>
         <li><a href="../index.html#faq">FAQ</a></li>
+        <li><a href="https://github.com/ESS2292/envgate-action">Lite Action</a></li>
       </ul>
     </nav>
     <main id="main" class="article">
@@ -129,15 +141,23 @@ node check-env.js .env .env.example || {
       </section>
     </main>
     <footer>
-      <div class="footer-row">
+      <nav class="family-nav" aria-label="Other tools in this family">
+        <span class="family-label">Also:</span>
+          <a href="https://ess2292.github.io/envgate/" aria-current="page">EnvGate</a>
+          <a href="https://ess2292.github.io/runtimegate/">RuntimeGate</a>
+          <a href="https://ess2292.github.io/lockgate/">LockGate</a>
+      </nav>
+<div class="footer-row">
         <div>
           EnvGate 0.1.0 by Emilio Straubel &middot; $19 one-time &middot; MIT source included &middot; no tracking
         </div>
         <div class="footer-links">
           <a href="../index.html">Home</a>
-          <a href="index.html">Guides</a>
+          <a href="index.html" aria-current="page">Guides</a>
           <a href="../privacy.html">Privacy</a>
           <a href="../terms.html">Terms</a>
+          <a href="https://github.com/ESS2292/envgate-action">Lite Action</a>
+          <a href="https://github.com/ESS2292/envgate-action/issues">Issues</a>
         </div>
       </div>
     </footer>
