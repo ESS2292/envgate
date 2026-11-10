@@ -1,0 +1,10 @@
+EnvGate check
+  example: examples/.env.example
+  env:     examples/.env
+
+Warnings (1):
+  [extra_key] EXTRA_DEBUG_FLAG: Extra key "EXTRA_DEBUG_FLAG" (not listed in example)
+
+PASS — no violations.
+(1 warning)
+exit:0

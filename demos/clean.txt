@@ -1,0 +1,6 @@
+EnvGate check
+  example: examples/clean.env.example
+  env:     examples/clean.env
+
+PASS — no violations.
+exit:0

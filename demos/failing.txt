@@ -1,0 +1,21 @@
+EnvGate check
+  example: examples/.env.example
+  env:     examples/failing.env
+
+Errors (6):
+  [placeholder] DATABASE_URL: Placeholder / empty value for "DATABASE_URL": empty value
+  [placeholder] API_KEY: Placeholder / empty value for "API_KEY": placeholder (your_*)
+  [secret] STRIPE_SECRET_KEY: Possible Stripe live secret key in "STRIPE_SECRET_KEY"
+           Value redacted
+  [secret] GITHUB_TOKEN: Possible GitHub token in "GITHUB_TOKEN"
+           Value redacted
+  [secret] AWS_ACCESS_KEY_ID: Possible AWS access key ID in "AWS_ACCESS_KEY_ID"
+           Value redacted
+  [secret] SLACK_BOT_TOKEN: Possible Slack token in "SLACK_BOT_TOKEN"
+           Value redacted
+
+Warnings (1):
+  [extra_key] EXTRA_DEBUG_FLAG: Extra key "EXTRA_DEBUG_FLAG" (not listed in example)
+
+FAIL — 6 errors, 1 warning.
+exit:1

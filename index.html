@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EnvGate — CI-Friendly Env Checker for Missing Keys, Placeholders &amp; Secret Shapes</title>
+  <meta name="description" content="Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values. EnvGate is a $19 one-time Node.js CLI by Emilio Straubel." />
+  <meta name="author" content="Emilio Straubel" />
+  <meta name="robots" content="noindex" />
+  <meta property="og:title" content="EnvGate — CI-Friendly Env Checker for Missing Keys, Placeholders &amp; Secret Shapes" />
+  <meta property="og:description" content="Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values." />
+  <meta property="og:type" content="website" />
+  <!-- TODO: replace og:image with the absolute https URL of og-image.svg (or a PNG export) once the public site URL is known. -->
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="og-image.svg" type="image/svg+xml" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="wrap">
+    <nav class="site-nav" aria-label="Primary">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">eg</span>
+        EnvGate
+      </a>
+      <ul class="nav-links">
+        <li><a href="#checks">What it checks</a></li>
+        <li><a href="#demo">Demo</a></li>
+        <li><a href="#ci">CI</a></li>
+        <li><a href="#limits">Limits</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Developer CLI · MIT source included</div>
+        <h1>EnvGate — CI-Friendly Env Checker for Missing Keys, Placeholders &amp; Secret Shapes</h1>
+        <p class="lead">
+          Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values.
+        </p>
+        <div class="meta">
+          <span class="chip"><em>v0.1.0</em></span>
+          <span class="chip">Node <em>18+</em></span>
+          <span class="chip">Runtime deps <em>0</em></span>
+          <span class="chip">License <em>MIT</em></span>
+          <span class="chip">One-time <em>$19 USD</em></span>
+        </div>
+        <p class="note">
+          EnvGate is a local Node.js CLI you run against your <code>.env</code> and <code>.env.example</code>.
+          It reports missing keys, placeholder/empty values, optional extra-key warnings, and a focused set of token/key patterns.
+          Findings name the <strong>key and kind only</strong>; values stay redacted.
+          This download is the <strong>0.1.0 source + CLI bundle</strong> (MIT).
+        </p>
+      </div>
+
+      <aside class="price-card" id="pricing" aria-label="Pricing">
+        <div class="amt">$19<span>USD · one-time</span></div>
+        <p>
+          Packaged CLI + full MIT source, examples, tests, and a sample GitHub Actions workflow.
+          You are buying a packaged release and seller-provided packaging/docs convenience — not exclusive proprietary rights to the code.
+        </p>
+        <button type="button" id="buy-btn" class="buy-btn" disabled data-checkout-url="">Checkout coming soon</button>
+        <p class="buy-note">Checkout is not live yet. Payments will be processed by Lemon Squeezy when the store opens.</p>
+        <div class="art" aria-hidden="true">
+          <svg class="art-svg" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stylized EnvGate gate graphic">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#38bdf8" stop-opacity=".9"/>
+                <stop offset="100%" stop-color="#5eead4" stop-opacity=".7"/>
+              </linearGradient>
+              <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stop-color="#1e293b"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+            </defs>
+            <rect width="640" height="360" fill="url(#g2)"/>
+            <circle cx="520" cy="70" r="90" fill="#38bdf8" opacity=".08"/>
+            <circle cx="90" cy="300" r="110" fill="#5eead4" opacity=".07"/>
+            <rect x="210" y="70" width="220" height="220" rx="28" fill="#0b1526" stroke="url(#g1)" stroke-width="3"/>
+            <rect x="245" y="110" width="150" height="36" rx="10" fill="#122038" stroke="#2a3a55"/>
+            <text x="320" y="134" text-anchor="middle" fill="#9aadc9" font-family="ui-monospace,monospace" font-size="14">.env.example</text>
+            <rect x="245" y="160" width="150" height="36" rx="10" fill="#122038" stroke="#2a3a55"/>
+            <text x="320" y="184" text-anchor="middle" fill="#9aadc9" font-family="ui-monospace,monospace" font-size="14">.env</text>
+            <path d="M320 210 v28" stroke="#5eead4" stroke-width="3" stroke-linecap="round"/>
+            <rect x="270" y="240" width="100" height="28" rx="14" fill="url(#g1)"/>
+            <text x="320" y="259" text-anchor="middle" fill="#042f2e" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">PASS / FAIL</text>
+            <text x="40" y="48" fill="#e8eefc" font-family="ui-sans-serif,system-ui,sans-serif" font-size="22" font-weight="700">EnvGate</text>
+            <text x="40" y="74" fill="#9aadc9" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13">redacted findings · CI exit codes</text>
+            <rect x="40" y="280" width="118" height="28" rx="14" fill="#122038" stroke="#2a3a55"/>
+            <text x="99" y="299" text-anchor="middle" fill="#4ade80" font-family="ui-monospace,monospace" font-size="12">exit 0</text>
+            <rect x="170" y="280" width="118" height="28" rx="14" fill="#122038" stroke="#2a3a55"/>
+            <text x="229" y="299" text-anchor="middle" fill="#fb7185" font-family="ui-monospace,monospace" font-size="12">exit 1</text>
+          </svg>
+        </div>
+      </aside>
+    </header>
+
+    <main id="main">
+      <div class="grid-2" id="checks">
+        <section>
+          <h2>What it checks</h2>
+          <ul>
+            <li><code>envgate check</code> — primary command</li>
+            <li>Missing keys vs example → errors</li>
+            <li>Extra keys → warnings by default; errors with <code>--strict-extra</code></li>
+            <li>Placeholder / empty detection (<code>TODO</code>, <code>CHANGEME</code>, <code>your_*</code>, <code>replace_me</code>, empty)</li>
+            <li>High-confidence secret pattern kinds: GitHub token, AWS access key ID, Stripe <strong>live</strong> secret key, Slack token, private key blocks</li>
+            <li>Redacted output (<code>Value redacted</code> / <code>[REDACTED]</code> — never prints secret values)</li>
+            <li><code>--env</code>, <code>--example</code>, <code>--json</code>, <code>--strict-extra</code></li>
+            <li>Exit codes: <code>0</code> pass, <code>1</code> violations, <code>2</code> usage/missing file</li>
+            <li>Zero runtime dependencies; Node <strong>18+</strong></li>
+            <li>Examples directory (synthetic demos only)</li>
+            <li>Sample GitHub Actions workflow sketch</li>
+            <li>Full MIT source (<code>bin/</code>, <code>src/</code>, tests, LICENSE, README)</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Requirements</h2>
+          <ul>
+            <li><strong>Node.js 18+</strong></li>
+            <li>Ability to run a local CLI (macOS, Linux, or Windows with Node)</li>
+            <li>An <code>.env.example</code> (or path passed via <code>--example</code>) for meaningful checks</li>
+          </ul>
+          <h3>After download</h3>
+          <pre class="code-block"><span class="c-muted"># After download / unpack of envgate-0.1.0</span>
+cd envgate
+npm test          <span class="c-muted"># optional: 37 tests</span>
+npm link          <span class="c-muted"># optional: puts envgate on PATH</span>
+envgate check
+<span class="c-muted"># or</span>
+node bin/envgate.js check --env .env --example .env.example</pre>
+        </section>
+      </div>
+
+      <section id="demo">
+        <h2>Real demo output</h2>
+        <p class="note" style="margin-top:0">These are recorded runs against the package examples. Demo values are synthetic. Secret values are never printed.</p>
+
+        <div class="grid-2">
+          <div class="terminal" aria-label="Clean EnvGate run">
+            <div class="bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="bar-cmd">node bin/envgate.js check --env examples/clean.env --example examples/clean.env.example</span>
+            </div>
+<pre><span class="c-accent">EnvGate check</span>
+  example: examples/clean.env.example
+  env:     examples/clean.env
+
+<span class="c-ok">PASS — no violations.</span>
+exit:0</pre>
+          </div>
+
+          <div class="terminal" aria-label="EnvGate run with an extra-key warning">
+            <div class="bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="bar-cmd">node bin/envgate.js check --env examples/.env --example examples/.env.example</span>
+            </div>
+<pre><span class="c-accent">EnvGate check</span>
+  example: examples/.env.example
+  env:     examples/.env
+
+<span class="c-warn">Warnings (1):</span>
+  [extra_key] EXTRA_DEBUG_FLAG: Extra key "EXTRA_DEBUG_FLAG" (not listed in example)
+
+<span class="c-ok">PASS — no violations.</span>
+(1 warning)
+exit:0</pre>
+          </div>
+        </div>
+
+        <div class="terminal" aria-label="Failing EnvGate run">
+          <div class="bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="bar-cmd">node bin/envgate.js check --env examples/failing.env --example examples/.env.example</span>
+          </div>
+<pre><span class="c-accent">EnvGate check</span>
+  example: examples/.env.example
+  env:     examples/failing.env
+
+<span class="c-err">Errors (6):</span>
+  [placeholder] DATABASE_URL: Placeholder / empty value for "DATABASE_URL": empty value
+  [placeholder] API_KEY: Placeholder / empty value for "API_KEY": placeholder (your_*)
+  [secret] STRIPE_SECRET_KEY: Possible Stripe live secret key in "STRIPE_SECRET_KEY"
+           <span class="c-muted">Value redacted</span>
+  [secret] GITHUB_TOKEN: Possible GitHub token in "GITHUB_TOKEN"
+           <span class="c-muted">Value redacted</span>
+  [secret] AWS_ACCESS_KEY_ID: Possible AWS access key ID in "AWS_ACCESS_KEY_ID"
+           <span class="c-muted">Value redacted</span>
+  [secret] SLACK_BOT_TOKEN: Possible Slack token in "SLACK_BOT_TOKEN"
+           <span class="c-muted">Value redacted</span>
+
+<span class="c-warn">Warnings (1):</span>
+  [extra_key] EXTRA_DEBUG_FLAG: Extra key "EXTRA_DEBUG_FLAG" (not listed in example)
+
+<span class="c-err">FAIL — 6 errors, 1 warning.</span>
+exit:1</pre>
+        </div>
+      </section>
+
+      <section id="ci">
+        <h2>GitHub Actions example</h2>
+        <p class="note" style="margin-top:0">
+          From the bundled workflow sketch. Provide <code>.env</code> in CI from secrets/vars — do not commit real secrets.
+          EnvGate only reads the env/example paths you pass — it does <strong>not</strong> scan the whole repository.
+        </p>
+        <div class="terminal" aria-label="Sample GitHub Actions workflow">
+          <div class="bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="bar-cmd">.github/workflows/envgate-example.yml</span>
+          </div>
+<pre><span class="c-muted"># Example only — not published. Copy into a consuming repository.
+# Runs EnvGate as a CI gate before tests/deploy.</span>
+name: EnvGate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  envgate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      <span class="c-muted"># When published to npm, prefer: npm install -g envgate
+      # For local/path installs during development:</span>
+      - name: Install EnvGate
+        run: npm install -g .
+
+      <span class="c-muted"># Provide CI secrets via the runner environment or a generated .env</span>
+      - name: Write .env from GitHub Secrets (example)
+        run: |
+          cat &gt; .env &lt;&lt;ENV
+          APP_NAME=${{ vars.APP_NAME }}
+          NODE_ENV=production
+          PORT=3000
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          API_KEY=${{ secrets.API_KEY }}
+          ENV
+
+      - name: Run EnvGate
+        run: envgate check --strict-extra
+
+      <span class="c-muted"># Optional: machine-readable report
+      # - name: EnvGate JSON
+      #   run: envgate check --json &gt; envgate-report.json</span></pre>
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>Honest limits</h2>
+        <p class="note" style="margin-top:0">
+          Honest limits: EnvGate is a <strong>gate/check</strong>, not a security guarantee.
+          It does not scan your whole repo or git history, does not implement <code>--schema</code>, and does not replace a dedicated secrets scanner.
+        </p>
+        <div class="grid-2">
+          <div>
+            <h3>Exact limitations</h3>
+            <ul>
+              <li>Checks <strong>only</strong> the env/example paths you pass — <strong>not</strong> the whole repository</li>
+              <li>Secret detection is <strong>high-confidence and narrow</strong>, not exhaustive</li>
+              <li>Parsing is intentionally simple (see README “Parsing support &amp; limitations”)</li>
+              <li><strong><code>--schema</code> is not available</strong> in 0.1.0</li>
+              <li>MIT license means recipients may use, modify, and redistribute under MIT terms; this sale does <strong>not</strong> grant proprietary exclusivity</li>
+              <li>This is a <strong>check helper</strong>, not a warranty of security or compliance</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Not included / not claimed</h3>
+            <ul>
+              <li><code>--schema</code> / typed JSON schema validation (<strong>not implemented</strong>; CLI exits with a clear “not supported” message if passed)</li>
+              <li>Multiline values, <code>$VAR</code> / <code>${VAR}</code> expansion, escape sequences in quotes</li>
+              <li>Whole-repo or git-history scanning</li>
+              <li>License-key / DRM gating inside the binary</li>
+              <li>Guaranteed catch-all for every secret format</li>
+              <li>Promised support SLAs or release dates</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="buy">
+        <h2>Price, license, support &amp; refunds</h2>
+        <p class="note" style="margin-top:0">
+          <strong>$19 USD</strong>, one-time purchase. No subscription.
+        </p>
+        <p class="note">
+          EnvGate is released under the <strong>MIT License</strong>. This purchase includes the source files listed in the package.
+          MIT permission includes use, modification, and redistribution subject to the license notice.
+          You are buying a packaged release and seller-provided packaging/docs convenience — <strong>not</strong> exclusive proprietary rights to the code.
+        </p>
+        <h3>Support</h3>
+        <p class="note">
+          Best-effort email replies from the seller when a buyer reports a clear bug in 0.1.0’s documented behavior (false crash, incorrect exit code on a documented case, or redaction failure).
+          No guaranteed response time, no phone/chat SLA, no custom feature work included in the purchase price.
+        </p>
+        <h3>Updates</h3>
+        <p class="note">
+          If a fixed 0.1.x or documented 0.2 package is uploaded to the same Lemon Squeezy product, existing buyers can access newly uploaded files through Lemon Squeezy <strong>My Orders</strong> (platform behavior per their docs).
+          <strong>No promised roadmap, ship dates, or version cadence.</strong>
+        </p>
+        <h3>Refunds</h3>
+        <p class="note">
+          14-day refund if the download is defective (corrupt archive or CLI will not run on Node 18+ as documented) after the buyer provides enough detail to reproduce.
+          No refund solely because the MIT source can also be obtained or shared under MIT terms, or because a feature listed under “Not included” is absent.
+        </p>
+        <p class="note">
+          Refunds are handled according to the seller’s stated policy and Lemon Squeezy’s platform rules.
+          Lemon Squeezy encourages sellers to set their own refund policy; Lemon Squeezy reserves the right to issue refunds within 60 days of purchase at its discretion to prevent chargebacks.
+          Card networks may still allow chargebacks regardless of a no-refunds policy.
+          Source: <a href="https://docs.lemonsqueezy.com/help/payments/refunds-chargebacks">Refunds and Chargebacks — Lemon Squeezy</a>.
+        </p>
+      </section>
+
+      <section id="faq" class="faq">
+        <h2>FAQ</h2>
+        <details>
+          <summary>What does EnvGate actually do?</summary>
+          <p class="note">
+            EnvGate is a local Node.js CLI you run against your <code>.env</code> and <code>.env.example</code>.
+            It reports missing keys, placeholder/empty values, optional extra-key warnings, and a focused set of token/key patterns.
+            Findings name the key and kind only; values stay redacted.
+          </p>
+        </details>
+        <details>
+          <summary>Is <code>--schema</code> supported?</summary>
+          <p class="note">
+            <code>--schema</code> is not available in 0.1.0. Typed / JSON schema validation is not implemented; the CLI exits with a clear “not supported” message if passed. Schema validation is future work, with no promised ship date.
+          </p>
+        </details>
+        <details>
+          <summary>Does it scan my whole repository or git history?</summary>
+          <p class="note">
+            No. Checks only the env/example paths you pass — not the whole repository. It does not scan arbitrary files or git history, and it does not replace a dedicated secrets scanner. Secret detection is high-confidence and narrow, not exhaustive.
+          </p>
+        </details>
+        <details>
+          <summary>Will EnvGate print my secrets?</summary>
+          <p class="note">
+            Secret values are never printed. Findings name the key and kind only. Redacted output uses <code>Value redacted</code> / <code>[REDACTED]</code>.
+          </p>
+        </details>
+        <details>
+          <summary>What do I get for $19?</summary>
+          <p class="note">
+            The 0.1.0 source + CLI bundle (MIT). Unpack, <code>npm link</code> or run <code>node bin/envgate.js</code>, and drop the check into CI. No runtime npm dependencies.
+            The package includes examples (synthetic demos only), tests, a sample GitHub Actions workflow sketch, and full MIT source.
+          </p>
+        </details>
+        <details>
+          <summary>Am I buying exclusive rights to the code?</summary>
+          <p class="note">
+            No. EnvGate is released under the MIT License. This purchase includes the source files listed in the package.
+            MIT permission includes use, modification, and redistribution subject to the license notice.
+            You are buying a packaged release and seller-provided packaging/docs convenience — not exclusive proprietary rights to the code.
+          </p>
+        </details>
+        <details>
+          <summary>What is the refund policy?</summary>
+          <p class="note">
+            14-day refund if the download is defective (corrupt archive or CLI will not run on Node 18+ as documented) after the buyer provides enough detail to reproduce.
+            No refund solely because the MIT source can also be obtained or shared under MIT terms, or because a feature listed under “Not included” is absent.
+            Lemon Squeezy also reserves the right to issue refunds within 60 days of purchase at its discretion to prevent chargebacks.
+          </p>
+        </details>
+        <details>
+          <summary>What support is included?</summary>
+          <p class="note">
+            Best-effort email replies from the seller when a buyer reports a clear bug in 0.1.0’s documented behavior (false crash, incorrect exit code on a documented case, or redaction failure).
+            No guaranteed response time, no phone/chat SLA, no custom feature work included in the purchase price.
+            <strong>Contact:</strong> <span class="todo">TODO: add the seller support email before launch.</span>
+          </p>
+        </details>
+        <details>
+          <summary>Who processes the payment?</summary>
+          <p class="note">
+            When checkout opens, payments will be processed by Lemon Squeezy, which will be the seller of record.
+            This site has no live checkout yet.
+          </p>
+        </details>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-row">
+        <div>
+          EnvGate 0.1.0 by Emilio Straubel · $19 one-time · MIT source included · no tracking, no fabricated testimonials or sales counts
+        </div>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    /*
+     * Checkout hook (disabled until launch).
+     * When a Lemon Squeezy checkout URL is ready:
+     *   1. Set data-checkout-url="https://..." on #buy-btn
+     *   2. This script enables the button and sends buyers to that URL.
+     * Leave data-checkout-url="" (empty) to keep the button disabled
+     * and labelled "Checkout coming soon".
+     */
+    (function () {
+      var btn = document.getElementById("buy-btn");
+      if (!btn) return;
+      var url = (btn.getAttribute("data-checkout-url") || "").trim();
+      if (!url) return;
+      btn.disabled = false;
+      btn.textContent = "Buy EnvGate — $19";
+      btn.addEventListener("click", function () {
+        window.location.href = url;
+      });
+    })();
+  </script>
+</body>
+</html>
