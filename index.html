@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values." />
   <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.png" />
   <meta name="twitter:image:alt" content="EnvGate — CI-friendly env checker" />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"EnvGate","applicationCategory":"DeveloperApplication","operatingSystem":"Node.js 18+","offers":{"@type":"Offer","price":"19","priceCurrency":"USD"},"description":"A zero-dependency Node.js CLI that checks an environment file against .env.example for missing keys, placeholders, extra keys, and high-confidence secret shapes, without printing values.","author":{"@type":"Person","name":"Emilio Straubel"},"url":"https://ess2292.github.io/envgate/"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"EnvGate","applicationCategory":"DeveloperApplication","operatingSystem":"Node.js 18+","offers":{"@type":"Offer","price":"19","priceCurrency":"USD"},"description":"A zero-dependency Node.js CLI that checks environment files against .env.example, .env.sample, or .env.template for missing keys, placeholders, extra keys, and high-confidence secret shapes, and can also scan workspaces, Docker Compose, and GitHub Actions env blocks, without printing values.","author":{"@type":"Person","name":"Emilio Straubel"},"url":"https://ess2292.github.io/envgate/"}</script>
   <meta name="theme-color" content="#0b1220" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
@@ -58,17 +58,18 @@
           Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values.
         </p>
         <div class="meta">
-          <span class="chip"><em>v0.1.0</em></span>
+          <span class="chip"><em>v0.2.0</em></span>
           <span class="chip">Node <em>18+</em></span>
           <span class="chip">Runtime deps <em>0</em></span>
           <span class="chip">License <em>MIT</em></span>
           <span class="chip">One-time <em>$19 USD</em></span>
         </div>
         <p class="note">
-          EnvGate is a local Node.js CLI you run against your <code>.env</code> and <code>.env.example</code>.
-          It reports missing keys, placeholder/empty values, optional extra-key warnings, and a focused set of token/key patterns.
+          EnvGate is a local Node.js CLI. By default it scans your repository for <code>.env.example</code>, <code>.env.sample</code>, and <code>.env.template</code> files (including per-workspace copies), plus Docker Compose and GitHub Actions env sources.
+          You can still compare a single pair with <code>--env</code> and <code>--example</code>.
+          It reports missing keys, placeholder/empty values, optional extra-key warnings, a focused set of token/key patterns, and info for <code>NEXT_PUBLIC_</code> / <code>VITE_</code> prefixes.
           Findings name the <strong>key and kind only</strong>; values stay redacted.
-          This download is the <strong>0.1.0 source + CLI bundle</strong> (MIT).
+          This download is the <strong>0.2.0 source + CLI bundle</strong> (MIT).
         </p>
       </div>
 
@@ -119,13 +120,18 @@
         <section>
           <h2>What it checks</h2>
           <ul>
-            <li><code>envgate check</code> — primary command</li>
-            <li>Missing keys vs example → errors</li>
+            <li><code>envgate check</code> — primary command (scan mode by default; pair mode with <code>--env</code> / <code>--example</code>)</li>
+            <li>Example-file variants: <code>.env.example</code>, <code>.env.sample</code>, <code>.env.template</code>, and dotted variants such as <code>.env.production.sample</code></li>
+            <li>Per-workspace example files, compared only to sibling env files</li>
+            <li>Missing keys vs example → errors (scan mode does not fail just because a sibling <code>.env</code> is not checked in)</li>
             <li>Extra keys → warnings by default; errors with <code>--strict-extra</code></li>
-            <li>Placeholder / empty detection (<code>TODO</code>, <code>CHANGEME</code>, <code>your_*</code>, <code>replace_me</code>, empty)</li>
+            <li>Placeholder / empty detection (<code>TODO</code>, <code>CHANGEME</code>, <code>your_*</code>, <code>replace_me</code>, empty) on committed value files</li>
             <li>High-confidence secret pattern kinds: GitHub token, AWS access key ID, Stripe <strong>live</strong> secret key, Slack token, private key blocks</li>
+            <li>Info (never a failure) for official client prefixes <code>NEXT_PUBLIC_</code> and <code>VITE_</code></li>
+            <li>Docker Compose <code>env_file</code> and <code>environment</code>, including required interpolation</li>
+            <li>GitHub Actions <code>env:</code> keys passed from secrets or vars</li>
             <li>Redacted output (<code>Value redacted</code> / <code>[REDACTED]</code> — never prints secret values)</li>
-            <li><code>--env</code>, <code>--example</code>, <code>--json</code>, <code>--strict-extra</code></li>
+            <li><code>--env</code>, <code>--example</code>, <code>--root</code>, <code>--ignore</code>, <code>--from-env</code>, <code>--json</code>, <code>--strict-extra</code></li>
             <li>Exit codes: <code>0</code> pass, <code>1</code> violations, <code>2</code> usage/missing file</li>
             <li>Zero runtime dependencies; Node <strong>18+</strong></li>
             <li>Examples directory (synthetic demos only)</li>
@@ -138,15 +144,15 @@
           <ul>
             <li><strong>Node.js 18+</strong></li>
             <li>Ability to run a local CLI (macOS, Linux, or Windows with Node)</li>
-            <li>An <code>.env.example</code> (or path passed via <code>--example</code>) for meaningful checks</li>
+            <li>An example file (<code>.env.example</code>, <code>.env.sample</code>, or <code>.env.template</code>) for meaningful checks, or a path passed via <code>--example</code></li>
           </ul>
           <h3>After download</h3>
-          <pre class="code-block"><span class="c-muted"># After download / unpack of envgate-0.1.0</span>
+          <pre class="code-block"><span class="c-muted"># After download / unpack of envgate-0.2.0</span>
 cd envgate
-npm test          <span class="c-muted"># optional: 37 tests</span>
+npm test          <span class="c-muted"># optional: 63 tests</span>
 npm link          <span class="c-muted"># optional: puts envgate on PATH</span>
-envgate check
-<span class="c-muted"># or</span>
+envgate check     <span class="c-muted"># scan the repo</span>
+<span class="c-muted"># or compare a single pair (0.1-style)</span>
 node bin/envgate.js check --env .env --example .env.example</pre>
         </section>
       </div>
@@ -228,7 +234,7 @@ exit:1</pre>
         <h2>GitHub Actions example</h2>
         <p class="note">
           From the bundled workflow sketch. Provide <code>.env</code> in CI from secrets/vars — do not commit real secrets.
-          EnvGate only reads the env/example paths you pass — it does <strong>not</strong> scan the whole repository.
+          In pair mode (<code>--env</code> / <code>--example</code>) EnvGate compares those two files. In scan mode (the default) it also discovers example-file variants, per-workspace examples, Compose <code>env_file</code> / <code>environment</code>, and GitHub Actions <code>env:</code> pass-throughs. It does <strong>not</strong> scan git history or arbitrary files for secrets.
           The example pins Node 22 because Node 20 reached official end of support on 30 April 2026.
           To fail the job when <code>.nvmrc</code>, Docker, and <code>setup-node</code> disagree on that pin, use the free
           <a href="https://github.com/ESS2292/runtimegate-action">RuntimeGate Lite Action</a>.
@@ -288,16 +294,17 @@ jobs:
         <h2>Honest limits</h2>
         <p class="note">
           Honest limits: EnvGate is a <strong>gate/check</strong>, not a security guarantee.
-          It does not scan your whole repo or git history, does not implement <code>--schema</code>, and does not replace a dedicated secrets scanner.
+          It does not scan git history or arbitrary files, does not implement <code>--schema</code>, is not a full YAML parser, and does not replace a dedicated secrets scanner.
         </p>
         <div class="grid-2">
           <div>
             <h3>Exact limitations</h3>
             <ul>
-              <li>Checks <strong>only</strong> the env/example paths you pass — <strong>not</strong> the whole repository</li>
+              <li>Scan mode looks at env example files, Compose files, and GitHub Actions workflows — <strong>not</strong> git history and <strong>not</strong> arbitrary source files</li>
+              <li>Compose and Actions parsing is targeted, not a full YAML parser</li>
               <li>Secret detection is <strong>high-confidence and narrow</strong>, not exhaustive</li>
-              <li>Parsing is intentionally simple (see README “Parsing support &amp; limitations”)</li>
-              <li><strong><code>--schema</code> is not available</strong> in 0.1.0</li>
+              <li>Parsing of <code>.env</code> files is intentionally simple (see README “Parsing support &amp; limitations”)</li>
+              <li><strong><code>--schema</code> is not available</strong> in 0.2.0</li>
               <li>MIT license means recipients may use, modify, and redistribute under MIT terms; this sale does <strong>not</strong> grant proprietary exclusivity</li>
               <li>This is a <strong>check helper</strong>, not a warranty of security or compliance</li>
             </ul>
@@ -307,7 +314,7 @@ jobs:
             <ul>
               <li><code>--schema</code> / typed JSON schema validation (<strong>not implemented</strong>; CLI exits with a clear “not supported” message if passed)</li>
               <li>Multiline values, <code>$VAR</code> / <code>${VAR}</code> expansion, escape sequences in quotes</li>
-              <li>Whole-repo or git-history scanning</li>
+              <li>Git-history scanning, or secret scanning of arbitrary source files</li>
               <li>License-key / DRM gating inside the binary</li>
               <li>Guaranteed catch-all for every secret format</li>
               <li>Promised support SLAs or release dates</li>
@@ -328,12 +335,12 @@ jobs:
         </p>
         <h3>Support</h3>
         <p class="note">
-          Best-effort email replies from the seller when a buyer reports a clear bug in 0.1.0’s documented behavior (false crash, incorrect exit code on a documented case, or redaction failure).
+          Best-effort email replies from the seller when a buyer reports a clear bug in 0.2.0’s documented behavior (false crash, incorrect exit code on a documented case, or redaction failure).
           No guaranteed response time, no phone/chat SLA, no custom feature work included in the purchase price.
         </p>
         <h3>Updates</h3>
         <p class="note">
-          If a fixed 0.1.x or documented 0.2 package is uploaded to the same Lemon Squeezy product, existing buyers can access newly uploaded files through Lemon Squeezy <strong>My Orders</strong> (platform behavior per their docs).
+          If a fixed 0.2.x package is uploaded to the same Lemon Squeezy product, existing buyers can access newly uploaded files through Lemon Squeezy <strong>My Orders</strong> (platform behavior per their docs).
           <strong>No promised roadmap, ship dates, or version cadence.</strong>
         </p>
         <h3>Refunds</h3>
@@ -352,8 +359,8 @@ jobs:
       <section class="cta-box" aria-label="Which EnvGate to use">
         <h2>Lite or the full CLI?</h2>
         <p>
-          EnvGate Lite is the free GitHub Action that answers one question: is every key from <code>.env.example</code> set?
-          The $19 CLI also catches placeholders, extra keys, and a narrow set of secret shapes, locally or in any CI.
+          EnvGate Lite is the free GitHub Action that answers one question: is every key from <code>.env.example</code> (or <code>.env.sample</code> / <code>.env.template</code>) set?
+          The $19 CLI also catches placeholders, extra keys, and a narrow set of secret shapes, and can scan workspaces, Compose, and Actions env sources, locally or in any CI.
           <a href="guides/envgate-lite-vs-cli-and-dotenv.html">Compare EnvGate Lite, the CLI, dotenv, dotenv-safe, and schema validators &rarr;</a>
         </p>
       </section>
@@ -363,21 +370,21 @@ jobs:
         <details>
           <summary>What does EnvGate actually do?</summary>
           <p class="note">
-            EnvGate is a local Node.js CLI you run against your <code>.env</code> and <code>.env.example</code>.
-            It reports missing keys, placeholder/empty values, optional extra-key warnings, and a focused set of token/key patterns.
+            EnvGate is a local Node.js CLI. By default it scans the repository for example files (including <code>.env.sample</code>, <code>.env.template</code>, and per-workspace copies), Docker Compose env sources, and GitHub Actions <code>env:</code> pass-throughs. You can still compare a single pair with <code>--env</code> and <code>--example</code>.
+            It reports missing keys, placeholder/empty values, optional extra-key warnings, a focused set of token/key patterns, and info for <code>NEXT_PUBLIC_</code> / <code>VITE_</code> prefixes.
             Findings name the key and kind only; values stay redacted.
           </p>
         </details>
         <details>
           <summary>Is <code>--schema</code> supported?</summary>
           <p class="note">
-            <code>--schema</code> is not available in 0.1.0. Typed / JSON schema validation is not implemented; the CLI exits with a clear “not supported” message if passed. Schema validation is future work, with no promised ship date.
+            <code>--schema</code> is not available in 0.2.0. Typed / JSON schema validation is not implemented; the CLI exits with a clear “not supported” message if passed. Schema validation is future work, with no promised ship date.
           </p>
         </details>
         <details>
           <summary>Does it scan my whole repository or git history?</summary>
           <p class="note">
-            No. Checks only the env/example paths you pass — not the whole repository. It does not scan arbitrary files or git history, and it does not replace a dedicated secrets scanner. Secret detection is high-confidence and narrow, not exhaustive.
+            It does not scan git history or arbitrary source files. In scan mode it discovers env example files (including workspace copies), Docker Compose files, and GitHub Actions workflows; in pair mode it compares only the paths you pass. It does not replace a dedicated secrets scanner. Secret detection is high-confidence and narrow, not exhaustive. Compose and Actions reading is not a full YAML parser.
           </p>
         </details>
         <details>
@@ -389,7 +396,7 @@ jobs:
         <details>
           <summary>What do I get for $19?</summary>
           <p class="note">
-            The 0.1.0 source + CLI bundle (MIT). Unpack, <code>npm link</code> or run <code>node bin/envgate.js</code>, and drop the check into CI. No runtime npm dependencies.
+            The 0.2.0 source + CLI bundle (MIT). Unpack, <code>npm link</code> or run <code>node bin/envgate.js</code>, and drop the check into CI. No runtime npm dependencies.
             The package includes examples (synthetic demos only), tests, a sample GitHub Actions workflow sketch, and full MIT source.
           </p>
         </details>
@@ -412,7 +419,7 @@ jobs:
         <details>
           <summary>What support is included?</summary>
           <p class="note">
-            Best-effort email replies from the seller when a buyer reports a clear bug in 0.1.0’s documented behavior (false crash, incorrect exit code on a documented case, or redaction failure).
+            Best-effort email replies from the seller when a buyer reports a clear bug in 0.2.0’s documented behavior (false crash, incorrect exit code on a documented case, or redaction failure).
             No guaranteed response time, no phone/chat SLA, no custom feature work included in the purchase price.
             <strong>Contact:</strong> <a href="mailto:emiliostephanstraubel-yvh2re@mail.grokbot.com">emiliostephanstraubel-yvh2re@mail.grokbot.com</a>
           </p>
@@ -448,7 +455,7 @@ jobs:
       </nav>
 <div class="footer-row">
         <div>
-          EnvGate 0.1.0 by Emilio Straubel · $19 one-time · MIT source included · no tracking, no fabricated testimonials or sales counts
+          EnvGate 0.2.0 by Emilio Straubel · $19 one-time · MIT source included · no tracking, no fabricated testimonials or sales counts
         </div>
         <div class="footer-links">
           <a href="index.html">Home</a>
