@@ -220,6 +220,9 @@ exit:1</pre>
         <p class="note" style="margin-top:0">
           From the bundled workflow sketch. Provide <code>.env</code> in CI from secrets/vars — do not commit real secrets.
           EnvGate only reads the env/example paths you pass — it does <strong>not</strong> scan the whole repository.
+          The example pins Node 22 because Node 20 reached official end of support on 30 April 2026.
+          To fail the job when <code>.nvmrc</code>, Docker, and <code>setup-node</code> disagree on that pin, use the free
+          <a href="https://github.com/ESS2292/runtimegate-action">RuntimeGate Lite Action</a>.
         </p>
         <div class="terminal" aria-label="Sample GitHub Actions workflow">
           <div class="bar">
@@ -408,6 +411,15 @@ jobs:
           <p class="note">
             When checkout opens, payments will be processed by Lemon Squeezy, which will be the seller of record.
             This site has no live checkout yet.
+          </p>
+        </details>
+        <details>
+          <summary>Is this the same as RuntimeGate?</summary>
+          <p class="note">
+            No. EnvGate checks environment files for missing keys, placeholders, and a narrow set of secret shapes.
+            RuntimeGate checks whether runtime version pins agree. The free
+            <a href="https://github.com/ESS2292/runtimegate-action">RuntimeGate Lite GitHub Action</a>
+            fails the job when Node.js pins in version files, Docker, and workflows disagree.
           </p>
         </details>
       </section>
