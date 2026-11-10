@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Guides: .env validation, CI env checks, and config hygiene — EnvGate</title>
-  <meta name="description" content="Practical guides for validating .env files against .env.example, catching missing environment variables in GitHub Actions, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
+  <meta name="description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
   <meta name="author" content="Emilio Straubel" />
   <meta name="robots" content="noindex" />
   <link rel="canonical" href="https://ess2292.github.io/envgate/guides/" />
   <meta property="og:title" content="Guides: .env validation, CI env checks, and config hygiene — EnvGate" />
-  <meta property="og:description" content="Practical guides for validating .env files against .env.example, catching missing environment variables in GitHub Actions, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
+  <meta property="og:description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://ess2292.github.io/envgate/guides/" />
   <meta property="og:site_name" content="EnvGate" />
@@ -17,11 +17,11 @@
   <meta property="article:published_time" content="2026-11-10" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Guides: .env validation, CI env checks, and config hygiene — EnvGate" />
-  <meta name="twitter:description" content="Practical guides for validating .env files against .env.example, catching missing environment variables in GitHub Actions, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
+  <meta name="twitter:description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
   <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.svg" />
   <link rel="stylesheet" href="../styles.css" />
   <link rel="icon" href="../og-image.svg" type="image/svg+xml" />
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example, catching missing environment variables in GitHub Actions, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-10", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-10", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -52,8 +52,16 @@
           <p>Three ways to check a .env file against .env.example for missing, empty, and extra keys: a shell one-liner, a dependency-free Node.js script, and a CI-ready CLI.</p>
         </article>
         <article class="guide-card">
+          <h2><a href="validate-env-against-env-example-in-ci.html">Validate .env against .env.example in CI</a></h2>
+          <p>How to check a CI job's environment or a generated env file against .env.example, fail on missing or empty keys, and keep secret values out of the logs, on GitHub Actions, GitLab CI, and other runners.</p>
+        </article>
+        <article class="guide-card">
           <h2><a href="github-actions-missing-env-vars.html">Catch missing environment variables in GitHub Actions</a></h2>
           <p>Why secrets and variables silently go missing in GitHub Actions, and how to fail fast with a clear message, without printing secret values to logs.</p>
+        </article>
+        <article class="guide-card">
+          <h2><a href="github-actions-empty-secrets.html">GitHub Actions secret is empty: why and how to fail fast</a></h2>
+          <p>When a GitHub Actions secret does not exist, it expands to an empty string and the job keeps going. Here is how to catch that and fail the job with the key name only.</p>
         </article>
         <article class="guide-card">
           <h2><a href="prevent-node-deploy-failures-missing-env-vars.html">Prevent Node.js deploys from failing on missing environment variables</a></h2>

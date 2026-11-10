@@ -6,7 +6,9 @@
   <url><loc>https://ess2292.github.io/envgate/terms.html</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://ess2292.github.io/envgate/guides/</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://ess2292.github.io/envgate/guides/how-to-validate-env-against-env-example.html</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://ess2292.github.io/envgate/guides/validate-env-against-env-example-in-ci.html</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://ess2292.github.io/envgate/guides/github-actions-missing-env-vars.html</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://ess2292.github.io/envgate/guides/github-actions-empty-secrets.html</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://ess2292.github.io/envgate/guides/prevent-node-deploy-failures-missing-env-vars.html</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://ess2292.github.io/envgate/guides/dotenv-vs-env-example.html</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://ess2292.github.io/envgate/guides/envgate-lite-vs-cli-and-dotenv.html</loc><lastmod>2026-11-10</lastmod></url>

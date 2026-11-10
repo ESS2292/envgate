@@ -144,7 +144,15 @@ node bin/envgate.js check --env .env --example .env.example</pre>
 
       <section id="demo">
         <h2>Real demo output</h2>
-        <p class="note" style="margin-top:0">These are recorded runs against the package examples. Demo values are synthetic. Secret values are never printed.</p>
+        <p class="note" style="margin-top:0">These are recorded runs against the package examples and the Action entrypoint. Demo values are synthetic. Secret values are never printed.</p>
+
+        <figure class="demo-rec">
+          <video autoplay loop muted playsinline controls poster="demos/envgate-demo.gif" width="960" height="540">
+            <source src="demos/envgate-demo.mp4" type="video/mp4" />
+            <img src="demos/envgate-demo.gif" width="960" height="540" alt="Terminal recording: EnvGate Lite and the EnvGate CLI fail when a required key is missing or empty, then pass once the key is set." />
+          </video>
+          <figcaption>EnvGate Lite and the CLI: a missing or empty key fails the check; the same check passes once the key is set. Recorded from the real tools.</figcaption>
+        </figure>
 
         <div class="grid-2">
           <div class="terminal" aria-label="Clean EnvGate run">

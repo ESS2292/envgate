@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Validate .env Against .env.example in CI — EnvGate Guides</title>
+  <meta name="description" content="How to check a CI job&#x27;s environment or a generated env file against .env.example, fail on missing or empty keys, and keep secret values out of the logs, on GitHub Actions, GitLab CI, and other runners." />
+  <meta name="author" content="Emilio Straubel" />
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://ess2292.github.io/envgate/guides/validate-env-against-env-example-in-ci.html" />
+  <meta property="og:title" content="Validate .env Against .env.example in CI — EnvGate Guides" />
+  <meta property="og:description" content="How to check a CI job&#x27;s environment or a generated env file against .env.example, fail on missing or empty keys, and keep secret values out of the logs, on GitHub Actions, GitLab CI, and other runners." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ess2292.github.io/envgate/guides/validate-env-against-env-example-in-ci.html" />
+  <meta property="og:site_name" content="EnvGate" />
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <meta property="article:published_time" content="2026-11-10" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Validate .env Against .env.example in CI — EnvGate Guides" />
+  <meta name="twitter:description" content="How to check a CI job&#x27;s environment or a generated env file against .env.example, fail on missing or empty keys, and keep secret values out of the logs, on GitHub Actions, GitLab CI, and other runners." />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="../og-image.svg" type="image/svg+xml" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Validate .env against .env.example in CI","description":"How to check a CI job's environment or a generated env file against .env.example, fail on missing or empty keys, and keep secret values out of the logs, on GitHub Actions, GitLab CI, and other runners.","author":{"@type":"Person","name":"Emilio Straubel"},"datePublished":"2026-11-10","dateModified":"2026-11-10","mainEntityOfPage":"https://ess2292.github.io/envgate/guides/validate-env-against-env-example-in-ci.html"}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="wrap">
+    <nav class="site-nav" aria-label="Primary">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark" aria-hidden="true">eg</span>
+        EnvGate
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html#checks">What it checks</a></li>
+        <li><a href="../index.html#pricing">Pricing</a></li>
+        <li><a href="index.html" aria-current="page">Guides</a></li>
+        <li><a href="../index.html#faq">FAQ</a></li>
+      </ul>
+    </nav>
+    <main id="main" class="article">
+      <p class="crumbs"><a href="../index.html">EnvGate</a> / <a href="index.html">Guides</a></p>
+      <section>
+        <div class="eyebrow">Guide &middot; Updated November 10, 2026</div>
+        <h1>Validate .env against .env.example in CI</h1>
+        <p class="lead">CI usually has no committed .env. Map secrets into the job or write a temporary file, then fail the pipeline when a required key is missing or empty.</p>
+
+        <p>Validating a <code>.env</code> file against <code>.env.example</code> is straightforward on a laptop: both files are in the working tree, and a script can compare key names before you start the app. CI is different. You usually should not have a committed <code>.env</code> with real values. Secrets arrive as the runner&rsquo;s environment variables, or you write a temporary file from those variables and hand it to a deploy tool. The check still answers the same questions &mdash; is every required key present, and is any of them empty? &mdash; but the way you feed it data changes.</p>
+        <p>This guide covers those CI patterns. For a shell one-liner or a small Node.js script you can also run locally, see <a href="how-to-validate-env-against-env-example.html">How to validate a .env file against .env.example</a>.</p>
+
+        <h2>What to check, and what to print</h2>
+        <p>In CI, a useful validator should:</p>
+        <ul>
+          <li>Take the required key names from a committed <code>.env.example</code> (the contract), not from a hard-coded list in the workflow that will drift.</li>
+          <li>Fail the job with a non-zero exit code when a required key is missing or empty, so later steps do not run.</li>
+          <li>Print <strong>key names only</strong>. CI logs are often readable by more people than the secrets are. Never echo values, even on failure.</li>
+        </ul>
+        <p>A presence-only check is not enough. In GitHub Actions, a missing secret expands to an empty string; in any CI, a generated file can contain <code>API_KEY=</code> or a placeholder copied from the example. Treat empty values as failures for required keys. The details of the GitHub Actions empty-secret case are in <a href="github-actions-empty-secrets.html">GitHub Actions secret is empty: why and how to fail fast</a>.</p>
+
+        <h2>Pattern 1: check the job environment</h2>
+        <p>This is the natural fit when the app or deploy step reads environment variables rather than a file. You map secrets and variables into the job, then check that every key in <code>.env.example</code> is set and non-empty there.</p>
+        <p>On GitHub Actions, the free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite</a> action does exactly that. It also never prints values:</p>
+        <pre class="code-block"><code>      - uses: actions/checkout@v5
+      - name: Check required env vars
+        uses: ESS2292/envgate-action@v1
+        with:
+          example: .env.example
+          fail-on-empty: &quot;true&quot;
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          API_KEY: ${{ secrets.API_KEY }}
+          APP_NAME: ${{ vars.APP_NAME }}</code></pre>
+        <p>A key counts as present if it is in the job environment. You do not need a <code>.env</code> file on the runner for this pattern.</p>
+
+        <h2>Pattern 2: write a file, then validate the file</h2>
+        <p>Some deploy tools want a file such as <code>.env.production</code>. Build that file from CI secrets, then validate it against <code>.env.example</code> <em>before</em> you deploy. The same action can check a file; a key still counts as present if it is in the file or in the job environment:</p>
+        <pre class="code-block"><code>      - name: Write .env for deploy
+        run: |
+          echo &quot;DATABASE_URL=${{ secrets.DATABASE_URL }}&quot; &gt;&gt; .env.production
+          echo &quot;API_KEY=${{ secrets.API_KEY }}&quot; &gt;&gt; .env.production
+          echo &quot;APP_NAME=${{ vars.APP_NAME }}&quot; &gt;&gt; .env.production
+
+      - name: Check .env.production against .env.example
+        uses: ESS2292/envgate-action@v1
+        with:
+          env-file: .env.production
+          fail-on-empty: &quot;true&quot;</code></pre>
+        <p>Two cautions. First, writing <code>echo "KEY=${{ secrets.KEY }}"</code> will still write an empty value when the secret is missing, which is why <code>fail-on-empty</code> matters. Second, do not <code>cat</code> the file in the logs, and do not upload it as an artifact.</p>
+
+        <h2>Other CI systems</h2>
+        <p>The same two patterns work anywhere you can run Node.js or a shell and fail the job on a non-zero exit code. In GitLab CI, for example, you can write a temporary file from CI variables and run a small checker:</p>
+        <pre class="code-block"><code># .gitlab-ci.yml (sketch)
+validate-env:
+  image: node:22
+  script:
+    - |
+      printf &#x27;%s\n&#x27; &quot;DATABASE_URL=${DATABASE_URL}&quot; &quot;API_KEY=${API_KEY}&quot; &quot;APP_NAME=${APP_NAME}&quot; &gt; .env.ci
+    - node check-env.js .env.ci .env.example
+    # do not cat .env.ci</code></pre>
+        <p><code>check-env.js</code> can be the dependency-free script from the <a href="how-to-validate-env-against-env-example.html">local validation guide</a>: it exits <code>1</code> when a key is missing or empty and prints names only. Keep that script in the repository so the runner does not have to download it. The EnvGate CLI can be used the same way in any CI that has Node.js 18+ once you have the package unpacked on the runner; it also flags placeholders, extra keys, and a narrow set of secret shapes, with values redacted, and it can emit <code>--json</code>.</p>
+        <p>The important part is the exit code, not the brand of CI:</p>
+        <ul>
+          <li><strong>0</strong> &mdash; the check passed (some tools allow warnings without failing).</li>
+          <li><strong>1</strong> &mdash; violations: missing, empty, or, if you opted in, other failures.</li>
+          <li><strong>2</strong> &mdash; setup error, such as a missing <code>.env.example</code> (this is how the EnvGate CLI reports it).</li>
+        </ul>
+
+        <h2>Place the check before work that depends on the config</h2>
+        <p>Run the validator as an early job or as the first step of the deploy job, before tests that need real credentials and before any deploy. If a required key is missing, there is no reason to build a container or push to a host. On GitHub Actions, skip this privileged check on fork pull requests, because those events do not receive repository secrets; see the empty-secrets guide for a job <code>if:</code> condition.</p>
+
+        <h2>What not to do</h2>
+        <ul>
+          <li><strong>Do not commit a real <code>.env</code></strong> so that CI can read it. The example file is the contract; values belong in the runner&rsquo;s secret store.</li>
+          <li><strong>Do not print values</strong> in <code>echo</code>, <code>cat</code>, debug logs, or artifacts.</li>
+          <li><strong>Do not treat a copied placeholder as success.</strong> <code>API_KEY=your_api_key_here</code> is present and non-empty. If people start from <code>.env.example</code>, you also need a placeholder check, which Lite does not do and the CLI does.</li>
+          <li><strong>Do not assume the check scans the repo.</strong> A file-based validator only reads the paths you pass it. It will not find a secret that was committed in some other file.</li>
+        </ul>
+
+      </section>
+      <section class="cta-box" aria-label="EnvGate">
+        <h2>Want more than a missing-key check?</h2>
+        <p>The free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite GitHub Action</a> fails a CI job when a key from <code>.env.example</code> isn&rsquo;t set. The full <strong>EnvGate CLI</strong> also flags placeholder and empty values, extra keys (optionally as errors), and a focused set of high-confidence secret shapes &mdash; locally or in any CI &mdash; with a JSON report and values always redacted.</p>
+        <p><strong>$19 one-time</strong> &middot; Node 18+ &middot; zero runtime dependencies &middot; MIT source included.</p>
+        <p><a class="cta-link" href="../index.html#pricing">See EnvGate &rarr;</a></p>
+      </section>
+      <section>
+        <h2>Related guides</h2>
+        <ul>
+          <li><a href="how-to-validate-env-against-env-example.html">How to validate a .env file against .env.example</a></li>
+          <li><a href="github-actions-empty-secrets.html">GitHub Actions secret is empty: why and how to fail fast</a></li>
+          <li><a href="github-actions-missing-env-vars.html">Catch missing environment variables in GitHub Actions</a></li>
+          <li><a href="dotenv-vs-env-example.html">dotenv vs .env.example: keeping config in sync</a></li>
+          <li><a href="envgate-lite-vs-cli-and-dotenv.html">EnvGate Lite vs the CLI, dotenv, and schema validators</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <div class="footer-row">
+        <div>
+          EnvGate 0.1.0 by Emilio Straubel &middot; $19 one-time &middot; MIT source included &middot; no tracking
+        </div>
+        <div class="footer-links">
+          <a href="../index.html">Home</a>
+          <a href="index.html">Guides</a>
+          <a href="../privacy.html">Privacy</a>
+          <a href="../terms.html">Terms</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
