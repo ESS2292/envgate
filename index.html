@@ -10,9 +10,15 @@
   <meta property="og:title" content="EnvGate — CI-Friendly Env Checker for Missing Keys, Placeholders &amp; Secret Shapes" />
   <meta property="og:description" content="Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values." />
   <meta property="og:type" content="website" />
-
+  <meta property="og:url" content="https://ess2292.github.io/envgate/" />
+  <meta property="og:site_name" content="EnvGate" />
   <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <link rel="canonical" href="https://ess2292.github.io/envgate/" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="EnvGate — CI-Friendly Env Checker for Missing Keys, Placeholders &amp; Secret Shapes" />
+  <meta name="twitter:description" content="Catch configuration mistakes and high-confidence secret shapes before they hit CI — without printing secret values." />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"EnvGate","applicationCategory":"DeveloperApplication","operatingSystem":"Node.js 18+","offers":{"@type":"Offer","price":"19","priceCurrency":"USD"},"description":"A zero-dependency Node.js CLI that checks an environment file against .env.example for missing keys, placeholders, extra keys, and high-confidence secret shapes, without printing values.","author":{"@type":"Person","name":"Emilio Straubel"},"url":"https://ess2292.github.io/envgate/"}</script>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="og-image.svg" type="image/svg+xml" />
 </head>
@@ -318,6 +324,15 @@ jobs:
           Lemon Squeezy encourages sellers to set their own refund policy; Lemon Squeezy reserves the right to issue refunds within 60 days of purchase at its discretion to prevent chargebacks.
           Card networks may still allow chargebacks regardless of a no-refunds policy.
           Source: <a href="https://docs.lemonsqueezy.com/help/payments/refunds-chargebacks">Refunds and Chargebacks — Lemon Squeezy</a>.
+        </p>
+      </section>
+
+      <section class="cta-box" aria-label="Which EnvGate to use">
+        <h2>Lite or the full CLI?</h2>
+        <p>
+          EnvGate Lite is the free GitHub Action that answers one question: is every key from <code>.env.example</code> set?
+          The $19 CLI also catches placeholders, extra keys, and a narrow set of secret shapes, locally or in any CI.
+          <a href="guides/envgate-lite-vs-cli-and-dotenv.html">Compare EnvGate Lite, the CLI, dotenv, dotenv-safe, and schema validators &rarr;</a>
         </p>
       </section>
 
