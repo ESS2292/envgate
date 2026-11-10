@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Run EnvGate, RuntimeGate, and LockGate Lite in One Workflow — EnvGate Guides</title>
+  <meta name="description" content="A single GitHub Actions workflow that runs the free EnvGate, RuntimeGate, and LockGate Lite Actions together, so missing env vars, runtime version drift, and an unfrozen install fail the job before deploy." />
+  <meta name="author" content="Emilio Straubel" />
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://ess2292.github.io/envgate/guides/ci-gates-envgate-runtimegate-lockgate.html" />
+  <meta property="og:title" content="Run EnvGate, RuntimeGate, and LockGate Lite in One Workflow — EnvGate Guides" />
+  <meta property="og:description" content="A single GitHub Actions workflow that runs the free EnvGate, RuntimeGate, and LockGate Lite Actions together, so missing env vars, runtime version drift, and an unfrozen install fail the job before deploy." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ess2292.github.io/envgate/guides/ci-gates-envgate-runtimegate-lockgate.html" />
+  <meta property="og:site_name" content="EnvGate" />
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <meta property="article:published_time" content="2026-11-10" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Run EnvGate, RuntimeGate, and LockGate Lite in One Workflow — EnvGate Guides" />
+  <meta name="twitter:description" content="A single GitHub Actions workflow that runs the free EnvGate, RuntimeGate, and LockGate Lite Actions together, so missing env vars, runtime version drift, and an unfrozen install fail the job before deploy." />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.svg" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="../og-image.svg" type="image/svg+xml" />
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Run EnvGate, RuntimeGate, and LockGate Lite in one GitHub Actions workflow", "description": "A single GitHub Actions workflow that runs the free EnvGate, RuntimeGate, and LockGate Lite Actions together, so missing env vars, runtime version drift, and an unfrozen install fail the job before deploy.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-10", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/ci-gates-envgate-runtimegate-lockgate.html"}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="wrap">
+    <nav class="site-nav" aria-label="Primary">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark" aria-hidden="true">eg</span>
+        EnvGate
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html#checks">What it checks</a></li>
+        <li><a href="../index.html#pricing">Pricing</a></li>
+        <li><a href="index.html" aria-current="page">Guides</a></li>
+        <li><a href="../index.html#faq">FAQ</a></li>
+      </ul>
+    </nav>
+    <main id="main" class="article">
+      <p class="crumbs"><a href="../index.html">EnvGate</a> / <a href="index.html">Guides</a></p>
+      <section>
+        <div class="eyebrow">Guide &middot; Updated November 10, 2026</div>
+        <h1>Run EnvGate, RuntimeGate, and LockGate Lite in one workflow</h1>
+        <p class="lead">Three free GitHub Actions, one job: fail on a missing env var, a drifted Node.js pin, or an unfrozen install, before the deploy step runs.</p>
+
+        <p>A CI job can pass tests and still ship a broken deploy. A secret was never created, so it arrives as an empty string. The Dockerfile still says Node 20, but <code>setup-node</code> moved to 22. The workflow runs <code>npm install</code>, so the tree on the runner is not the tree in the lockfile. Each of those is a different file, and each one is easy to miss on review.</p>
+        <p>The three free Lite Actions each watch one of those surfaces. You can run them in a single job, in any Actions workflow, with no paid download. This guide is the combined example.</p>
+
+        <ul>
+          <li><a href="https://github.com/ESS2292/envgate-action">EnvGate Lite</a> fails when a key from <code>.env.example</code> is missing from the job environment (and, optionally, when it is present but empty).</li>
+          <li><a href="https://github.com/ESS2292/runtimegate-action">RuntimeGate Lite</a> fails when Node.js version pins in version files, package manifests, Dockerfiles, Compose, and <code>setup-node</code> steps disagree.</li>
+          <li><a href="https://github.com/ESS2292/lockgate-action">LockGate Lite</a> fails when mixed lockfiles are committed, or when CI runs an unfrozen install instead of <code>npm ci</code> (or the Yarn / bun equivalent).</li>
+        </ul>
+
+        <h2>The workflow</h2>
+        <p>Copy this into <code>.github/workflows/ci-gates.yml</code>. Change the <code>env:</code> names to the keys your <code>.env.example</code> actually lists. The <code>DATABASE_URL</code> and <code>API_KEY</code> lines below are examples, not a required set.</p>
+        <pre class="code-block"><code>name: CI gates
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      API_KEY: ${{ secrets.API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check required environment variables
+        uses: ESS2292/envgate-action@v1
+        with:
+          example: .env.example
+          fail-on-empty: &quot;true&quot;
+
+      - name: Check runtime version pins
+        uses: ESS2292/runtimegate-action@v1
+
+      - name: Check lockfiles and CI installs
+        uses: ESS2292/lockgate-action@v1</code></pre>
+
+        <p>When a repository secret does not exist, <code>${{ secrets.DATABASE_URL }}</code> expands to an empty string, so the variable is set but empty. <code>fail-on-empty: &quot;true&quot;</code> is what catches that case. EnvGate Lite reports key names only; it does not print values.</p>
+
+        <h2>What each step needs</h2>
+        <ul>
+          <li><strong>EnvGate Lite</strong> needs a template file, <code>.env.example</code> by default, and the required keys mapped into the job&rsquo;s environment (or into an <code>env-file</code>). If the repository has no env template, omit this step rather than pointing it at a missing file.</li>
+          <li><strong>RuntimeGate Lite</strong> scans the checkout for pins. It needs no extra inputs for the default check. Add <code>eol: &quot;true&quot;</code> if you also want the job to fail when a Node.js pin is past official end of support. The dates are vendored in the Action; there is no network call.</li>
+          <li><strong>LockGate Lite</strong> also scans the checkout and needs no extra inputs for a typical app repository. If the project is a library that gitignores its lockfile (ESLint and Express do this), Lite treats that as an intentional policy: it warns instead of failing, and it does not flag <code>npm install</code> in CI, because a library that does not commit a lockfile cannot run <code>npm ci</code>. Set <code>lockfile-policy: app</code> if you still want a committed lockfile, or <code>library</code> to force the library policy without a gitignore. Manifests under <code>tests/fixtures</code>-style paths are skipped by default.</li>
+        </ul>
+
+        <h2>Where to put it in a larger pipeline</h2>
+        <p>Run this job early, on the same <code>push</code> and <code>pull_request</code> events as the rest of CI, and make later jobs <code>needs: gates</code> if you want a failed gate to skip the build or deploy. On pull requests from forks, repository secrets are not available, so an EnvGate Lite step with <code>fail-on-empty: &quot;true&quot;</code> will fail if it expects those secrets. Keep the env check on jobs that are supposed to have secrets (for example <code>push</code> to the default branch, or pull requests from the same repository), and leave it off untrusted fork PRs.</p>
+
+        <h2>What this workflow does not do</h2>
+        <ul>
+          <li>It does not install the paid CLIs, and it does not need a store checkout. The Lite Actions are the whole check.</li>
+          <li>EnvGate Lite does not flag placeholders, extra keys, or secret shapes; those are CLI-only.</li>
+          <li>RuntimeGate Lite does not, in this example, enable the end-of-life check unless you set <code>eol: &quot;true&quot;</code>.</li>
+          <li>LockGate Lite does not compare <code>package.json</code> to <code>package-lock.json</code> and does not read Dockerfiles. Mixed lockfiles and unfrozen CI installs are what it covers here.</li>
+        </ul>
+      </section>
+      <section class="cta-box" aria-label="The free Actions">
+        <h2>The three free Actions</h2>
+        <p>Each Lite Action is MIT-licensed, has zero runtime dependencies, and runs on GitHub&rsquo;s <code>node24</code> JavaScript Action runtime.</p>
+        <ul>
+          <li><a href="https://github.com/ESS2292/envgate-action">EnvGate Lite</a> &mdash; missing or empty keys from <code>.env.example</code></li>
+          <li><a href="https://github.com/ESS2292/runtimegate-action">RuntimeGate Lite</a> &mdash; Node.js version pins that disagree</li>
+          <li><a href="https://github.com/ESS2292/lockgate-action">LockGate Lite</a> &mdash; mixed lockfiles and unfrozen CI installs</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Related guides</h2>
+        <ul>
+          <li><a href="github-actions-missing-env-vars.html">Catch missing environment variables in GitHub Actions</a></li>
+          <li><a href="github-actions-empty-secrets.html">GitHub Actions secret is empty: why and how to fail fast</a></li>
+          <li><a href="validate-env-against-env-example-in-ci.html">Validate .env against .env.example in CI</a></li>
+          <li><a href="envgate-lite-vs-cli-and-dotenv.html">EnvGate Lite vs the CLI, dotenv, and schema validators</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <div class="footer-row">
+        <div>
+          EnvGate 0.1.0 by Emilio Straubel &middot; $19 one-time &middot; MIT source included &middot; no tracking
+        </div>
+        <div class="footer-links">
+          <a href="../index.html">Home</a>
+          <a href="index.html">Guides</a>
+          <a href="../privacy.html">Privacy</a>
+          <a href="../terms.html">Terms</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

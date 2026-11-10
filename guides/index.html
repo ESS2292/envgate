@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Guides: .env validation, CI env checks, and config hygiene — EnvGate</title>
-  <meta name="description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
+  <meta name="description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow." />
   <meta name="author" content="Emilio Straubel" />
   <meta name="robots" content="noindex" />
   <link rel="canonical" href="https://ess2292.github.io/envgate/guides/" />
   <meta property="og:title" content="Guides: .env validation, CI env checks, and config hygiene — EnvGate" />
-  <meta property="og:description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
+  <meta property="og:description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://ess2292.github.io/envgate/guides/" />
   <meta property="og:site_name" content="EnvGate" />
@@ -17,11 +17,11 @@
   <meta property="article:published_time" content="2026-11-10" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Guides: .env validation, CI env checks, and config hygiene — EnvGate" />
-  <meta name="twitter:description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators." />
+  <meta name="twitter:description" content="Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow." />
   <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.svg" />
   <link rel="stylesheet" href="../styles.css" />
   <link rel="icon" href="../og-image.svg" type="image/svg+xml" />
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, and comparing EnvGate Lite, the CLI, dotenv, and schema validators.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-10", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-10", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -47,6 +47,10 @@
         <p>Short, practical guides about keeping environment configuration in sync, so a missing variable fails a check instead of a deploy. Code samples are meant to be copied and run.</p>
       </section>
       <div class="guide-list">
+        <article class="guide-card">
+          <h2><a href="ci-gates-envgate-runtimegate-lockgate.html">Run EnvGate, RuntimeGate, and LockGate Lite in one workflow</a></h2>
+          <p>A single GitHub Actions job that runs the three free Lite Actions together, so a missing env var, a drifted Node.js pin, or an unfrozen install fails the job before deploy.</p>
+        </article>
         <article class="guide-card">
           <h2><a href="how-to-validate-env-against-env-example.html">How to validate a .env file against .env.example</a></h2>
           <p>Three ways to check a .env file against .env.example for missing, empty, and extra keys: a shell one-liner, a dependency-free Node.js script, and a CI-ready CLI.</p>
