@@ -80,7 +80,7 @@
           You are buying a packaged release and seller-provided packaging/docs convenience — not exclusive proprietary rights to the code.
         </p>
         <button type="button" id="buy-btn" class="buy-btn" disabled data-checkout-url="">Checkout coming soon</button>
-        <p class="buy-note">Checkout is not live yet. Payments will be processed by Lemon Squeezy when the store opens.</p>
+        <p class="buy-note">Checkout is not live yet. The payment platform that will process orders (as merchant of record) will be named here before checkout opens.</p>
         <div class="art" aria-hidden="true">
           <svg class="art-svg" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -340,7 +340,7 @@ jobs:
         </p>
         <h3>Updates</h3>
         <p class="note">
-          If a fixed 0.2.x package is uploaded to the same Lemon Squeezy product, existing buyers can access newly uploaded files through Lemon Squeezy <strong>My Orders</strong> (platform behavior per their docs).
+          If a fixed 0.2.x package is published, it will be delivered through the payment platform’s order/download page.
           <strong>No promised roadmap, ship dates, or version cadence.</strong>
         </p>
         <h3>Refunds</h3>
@@ -349,10 +349,9 @@ jobs:
           No refund solely because the MIT source can also be obtained or shared under MIT terms, or because a feature listed under “Not included” is absent.
         </p>
         <p class="note">
-          Refunds are handled according to the seller’s stated policy and Lemon Squeezy’s platform rules.
-          Lemon Squeezy encourages sellers to set their own refund policy; Lemon Squeezy reserves the right to issue refunds within 60 days of purchase at its discretion to prevent chargebacks.
+          Refunds are handled according to the seller’s stated policy and the payment platform’s rules.
+          The payment platform will be named and its terms linked here before sales begin.
           Card networks may still allow chargebacks regardless of a no-refunds policy.
-          Source: <a href="https://docs.lemonsqueezy.com/help/payments/refunds-chargebacks">Refunds and Chargebacks — Lemon Squeezy</a>.
         </p>
       </section>
 
@@ -413,7 +412,7 @@ jobs:
           <p class="note">
             14-day refund if the download is defective (corrupt archive or CLI will not run on Node 18+ as documented) after the buyer provides enough detail to reproduce.
             No refund solely because the MIT source can also be obtained or shared under MIT terms, or because a feature listed under “Not included” is absent.
-            Lemon Squeezy also reserves the right to issue refunds within 60 days of purchase at its discretion to prevent chargebacks.
+            The payment platform’s rules may also apply to refunds.
           </p>
         </details>
         <details>
@@ -427,7 +426,7 @@ jobs:
         <details>
           <summary>Who processes the payment?</summary>
           <p class="note">
-            When checkout opens, payments will be processed by Lemon Squeezy, which will be the seller of record.
+            When checkout opens, payments will be processed by a third-party payment platform acting as merchant of record. That platform will be named here before checkout opens.
             This site has no live checkout yet.
           </p>
         </details>
@@ -473,7 +472,7 @@ jobs:
   <script>
     /*
      * Checkout hook (disabled until launch).
-     * When a Lemon Squeezy checkout URL is ready:
+     * When a checkout URL is ready:
      *   1. Set data-checkout-url="https://..." on #buy-btn
      *   2. This script enables the button and sends buyers to that URL.
      * Leave data-checkout-url="" (empty) to keep the button disabled
