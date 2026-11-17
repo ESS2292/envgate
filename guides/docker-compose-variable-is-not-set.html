@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Docker Compose &ldquo;Variable Is Not Set. Defaulting to a Blank String&rdquo;: Fail CI Instead — EnvGate Guides</title>
+  <meta name="description" content="Docker Compose only warns when a ${VAR} in compose.yaml is unset, then substitutes an empty string. How to make CI fail on it, and how to keep .env.example in sync with compose.yaml." />
+  <meta name="author" content="Emilio Straubel" />
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://ess2292.github.io/envgate/guides/docker-compose-variable-is-not-set.html" />
+  <meta property="og:title" content="Docker Compose &ldquo;Variable Is Not Set. Defaulting to a Blank String&rdquo;: Fail CI Instead — EnvGate Guides" />
+  <meta property="og:description" content="Docker Compose only warns when a ${VAR} in compose.yaml is unset, then substitutes an empty string. How to make CI fail on it, and how to keep .env.example in sync with compose.yaml." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ess2292.github.io/envgate/guides/docker-compose-variable-is-not-set.html" />
+  <meta property="og:site_name" content="EnvGate" />
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="EnvGate — CI-friendly env checker" />
+  <meta property="article:published_time" content="2026-11-17" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Docker Compose &ldquo;Variable Is Not Set. Defaulting to a Blank String&rdquo;: Fail CI Instead — EnvGate Guides" />
+  <meta name="twitter:description" content="Docker Compose only warns when a ${VAR} in compose.yaml is unset, then substitutes an empty string. How to make CI fail on it, and how to keep .env.example in sync with compose.yaml." />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta name="twitter:image:alt" content="EnvGate — CI-friendly env checker" />
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="stylesheet" href="../styles.css" />
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Docker Compose “variable is not set. Defaulting to a blank string”: fail CI instead", "description": "Docker Compose only warns when a ${VAR} in compose.yaml is unset, then substitutes an empty string. How to make CI fail on it, and how to keep .env.example in sync with compose.yaml.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-17", "dateModified": "2026-11-17", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/docker-compose-variable-is-not-set.html"}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="wrap">
+    <nav class="site-nav" aria-label="Primary">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark" aria-hidden="true">eg</span>
+        EnvGate
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html#checks">What it checks</a></li>
+        <li><a href="../index.html#demo">Demo</a></li>
+        <li><a href="../index.html#ci">CI</a></li>
+        <li><a href="../index.html#limits">Limits</a></li>
+        <li><a href="../index.html#pricing">Pricing</a></li>
+        <li><a href="index.html" aria-current="page">Guides</a></li>
+        <li><a href="../index.html#faq">FAQ</a></li>
+        <li><a href="https://github.com/ESS2292/envgate-action">Lite Action</a></li>
+      </ul>
+    </nav>
+    <main id="main" class="article">
+      <p class="crumbs"><a href="../index.html">EnvGate</a> / <a href="index.html">Guides</a></p>
+      <section>
+        <div class="eyebrow">Guide &middot; November 17, 2026</div>
+        <h1>Docker Compose &ldquo;variable is not set. Defaulting to a blank string&rdquo;: fail CI instead</h1>
+        <p class="lead">Compose treats an unset <code>${VAR}</code> as a warning, substitutes an empty string, and keeps going. Here is how to make that a CI failure, and how to keep <code>.env.example</code> in step with <code>compose.yaml</code>.</p>
+
+        <p>You run <code>docker compose up</code> or <code>docker compose config</code> and see a line like this:</p>
+        <pre class="code-block"><code>level=warning msg="The \"DATABASE_URL\" variable is not set. Defaulting to a blank string."</code></pre>
+        <p>The command still succeeds. The container starts with <code>DATABASE_URL</code> set to an empty string, and the failure shows up later as a connection error inside the app, not as a failed step. In CI the warning scrolls past in the log, and the job stays green.</p>
+        <p>Every command and output on this page was run on November 17, 2026 against a small sample project, with the standalone Docker Compose binary v2.40.3 (<code>docker-compose version</code> printed <code>Docker Compose version v2.40.3</code>), Node.js 24, and EnvGate 0.2.1. Only <code>docker compose config</code> was used; no containers were started. The timestamps in the output are from that run.</p>
+
+        <h2>The sample project</h2>
+        <p><code>compose.yaml</code> uses every common way of pulling a value from the host:</p>
+        <pre class="code-block"><code>services:
+  web:
+    image: "nginx:${NGINX_TAG:-1.27}"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL must be set}
+      WEBHOOK_SECRET:
+      LOG_LEVEL: info
+      SENTRY_DSN: ${SENTRY_DSN:-}</code></pre>
+        <p>The committed <code>.env.example</code> only lists one of them:</p>
+        <pre class="code-block"><code>DATABASE_URL=</code></pre>
+
+        <h2>What Compose does with each form</h2>
+        <p>The <a href="https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/">Compose interpolation docs</a> define the syntax: <code>${VAR}</code> substitutes the value, <code>${VAR:-default}</code> and <code>${VAR-default}</code> fall back to a default, and <code>${VAR:?error}</code> and <code>${VAR?error}</code> &ldquo;exit with error&rdquo; when the variable is missing. The docs also say that if a variable is not set, Compose substitutes an empty string. Values come from your shell, then a file passed with <code>--env-file</code>, then (if <code>--env-file</code> is not used) a <code>.env</code> file in the project directory.</p>
+        <p>With nothing set in the shell and no <code>.env</code> file:</p>
+        <pre class="code-block"><code>$ docker compose config &gt; /dev/null; echo "exit=$?"
+time="2026-11-17T17:18:08-05:00" level=warning msg="The \"DATABASE_URL\" variable is not set. Defaulting to a blank string."
+error while interpolating services.web.environment.REDIS_URL: required variable REDIS_URL is missing a value: REDIS_URL must be set
+exit=1</code></pre>
+        <p>Only the <code>:?</code> form failed the command. With <code>REDIS_URL</code> set, the exit code drops to 0 and the rendered config shows what the container would actually get:</p>
+        <pre class="code-block"><code>$ REDIS_URL=redis://cache:6379 docker compose config; echo "exit=$?"
+time="2026-11-17T17:18:15-05:00" level=warning msg="The \"DATABASE_URL\" variable is not set. Defaulting to a blank string."
+name: cdemo
+services:
+  web:
+    environment:
+      DATABASE_URL: ""
+      LOG_LEVEL: info
+      REDIS_URL: redis://cache:6379
+      SENTRY_DSN: ""
+      WEBHOOK_SECRET: null
+    image: nginx:1.27
+    networks:
+      default: null
+networks:
+  default:
+    name: cdemo_default
+exit=0</code></pre>
+        <p>Three things to notice:</p>
+        <ul>
+          <li><strong><code>${DATABASE_URL}</code></strong> produced a warning and an empty string, with exit code 0.</li>
+          <li><strong><code>WEBHOOK_SECRET:</code></strong> with no value is a pass-through from the host. It was unset, and Compose printed <em>no warning at all</em>; the rendered value is <code>null</code>.</li>
+          <li><strong><code>${SENTRY_DSN:-}</code></strong> and <code>${NGINX_TAG:-1.27}</code> are explicitly optional. No warning, by design.</li>
+        </ul>
+        <p>Adding a <code>.env</code> file next to <code>compose.yaml</code> containing <code>DATABASE_URL=postgres://app@db/app</code> made the warning go away and the rendered value became <code>postgres://app@db/app</code>. That is the usual reason the warning appears in CI but not locally: the developer has a <code>.env</code>, and the runner does not.</p>
+
+        <h2>Fix 1: mark required variables with <code>:?</code></h2>
+        <p>The cheapest fix lives in <code>compose.yaml</code> itself. Change <code>${DATABASE_URL}</code> to <code>${DATABASE_URL:?DATABASE_URL must be set}</code> for anything the service cannot run without. As shown above, Compose then refuses to render the config and exits 1, both locally and in CI.</p>
+        <p>Two limits. <code>:?</code> only covers <code>${...}</code> interpolation, not the pass-through form (<code>WEBHOOK_SECRET:</code> or <code>- WEBHOOK_SECRET</code>). And it is opt-in per variable, so a new <code>${VAR}</code> added without it goes back to warning-only.</p>
+
+        <h2>Fix 2: turn the warning into a failing CI step</h2>
+        <p><code>docker compose config --help</code> in v2.40.3 lists no option that makes this warning fatal, so capture stderr and check it. The step below was tested under <code>bash -e</code>; GitHub Actions bash steps also run with <code>-e</code>:</p>
+        <pre class="code-block"><code>      - name: Fail on unset Compose variables
+        shell: bash
+        run: |
+          status=0
+          docker compose config --quiet 2&gt; compose-warnings.txt || status=$?
+          cat compose-warnings.txt &gt;&amp;2
+          if grep -q "variable is not set" compose-warnings.txt; then status=1; fi
+          exit $status</code></pre>
+        <p>Results against the sample project:</p>
+        <pre class="code-block"><code>nothing set                                  exit=1  (warning + REDIS_URL error)
+REDIS_URL set                                exit=1  (DATABASE_URL warning)
+DATABASE_URL and REDIS_URL set               exit=0
+DATABASE_URL set but empty, REDIS_URL set    exit=0</code></pre>
+        <p>The <code>|| status=$?</code> matters: without it, <code>bash -e</code> exits as soon as <code>docker compose config</code> fails, before the captured error is printed, and the log shows a failed step with no reason. The last row is the gap in this approach: a variable that is set to an empty string &mdash; for example a GitHub Actions secret that does not exist, which expands to <code>""</code> &mdash; does not trigger the warning. The unset pass-through <code>WEBHOOK_SECRET</code> did not trigger it either.</p>
+
+        <h2>Fix 3: check the required keys before Compose runs</h2>
+        <p>The free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite GitHub Action</a> reads key names from <code>.env.example</code> and fails the job if any are unset in the job environment, or empty when <code>fail-on-empty</code> is on. Set the variables at the job level so the check and the Compose step see the same values:</p>
+        <pre class="code-block"><code>jobs:
+  compose-check:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ESS2292/envgate-action@v1
+        with:
+          example: .env.example
+          fail-on-empty: "true"
+      - run: docker compose config --quiet</code></pre>
+        <p>Run locally through the action&rsquo;s own entry point, with <code>.env.example</code> listing all three keys, <code>REDIS_URL</code> set, <code>WEBHOOK_SECRET</code> set to an empty string, and <code>DATABASE_URL</code> unset, it printed:</p>
+        <pre class="code-block"><code>::error title=Missing env key::DATABASE_URL is listed in .env.example but is not set
+::error title=Empty env key::WEBHOOK_SECRET is set but empty
+EnvGate Lite: 1 missing, 1 empty (of 3).</code></pre>
+        <p>and returned exit code 1. With all three set to non-empty values it printed <code>EnvGate Lite: OK, 3 key(s) present.</code> and returned 0. Unlike the stderr check, this catches the empty-string case and the pass-through key. Its limit is the other direction: Lite only knows the keys that are <em>in</em> <code>.env.example</code>. In the original sample, where the example listed only <code>DATABASE_URL</code>, Lite would never ask about <code>REDIS_URL</code> or <code>WEBHOOK_SECRET</code>.</p>
+
+        <h2>Keep .env.example in sync with compose.yaml</h2>
+        <p>That leaves the drift itself: someone adds <code>${REDIS_URL}</code> to <code>compose.yaml</code> and never adds it to <code>.env.example</code>. The <a href="../index.html">EnvGate CLI</a> reads Compose files in scan mode and reports interpolated or pass-through keys that are not listed in a nearby example file. Against the original sample:</p>
+        <pre class="code-block"><code>$ envgate check
+EnvGate check
+  examples: .env.example
+  env:      (none)
+  compose:  compose.yaml
+
+Warnings (2):
+  [compose_undocumented] REDIS_URL: Compose key "REDIS_URL" in compose.yaml is interpolated or passed through from the host, but is not listed in a nearby example file.
+  [compose_undocumented] WEBHOOK_SECRET: Compose key "WEBHOOK_SECRET" in compose.yaml is interpolated or passed through from the host, but is not listed in a nearby example file.
+
+PASS — no violations.
+(2 warnings)
+$ echo $?
+0</code></pre>
+        <p>It skipped <code>DATABASE_URL</code> (documented), <code>LOG_LEVEL</code> (a literal value in the Compose file), and the <code>:-</code> defaults. These are warnings, so the exit code is 0. To make them fail CI, use the JSON report:</p>
+        <pre class="code-block"><code>$ envgate check --json | jq -e '.summary.compose == 0'
+false
+$ echo $?
+1</code></pre>
+        <p>After adding <code>REDIS_URL=</code> and <code>WEBHOOK_SECRET=</code> to <code>.env.example</code>, <code>envgate check</code> printed <code>PASS — no violations.</code> with no warnings, and the <code>jq</code> check printed <code>true</code> and exited 0. At that point the Lite Action step above covers all three keys.</p>
+
+        <h2>Limits worth knowing</h2>
+        <ul>
+          <li>The stderr check matches Compose&rsquo;s current warning text. If a future Compose release rewords it, the <code>grep</code> needs updating.</li>
+          <li>EnvGate&rsquo;s Compose reader is line-based and is not a full YAML parser. It ignores <code>COMPOSE_*</code> and <code>DOCKER_*</code> names, and treats <code>$$</code> as a literal dollar, as Compose does.</li>
+          <li>None of these checks tell you a value is <em>correct</em>. A set, non-empty <code>DATABASE_URL</code> pointing at the wrong host passes all three.</li>
+          <li>Values are never printed by EnvGate or EnvGate Lite; only key names. <code>docker compose config</code> without <code>--quiet</code> does print resolved values, so avoid it in CI logs when real secrets are set.</li>
+        </ul>
+
+      </section>
+      <section class="cta-box" aria-label="EnvGate">
+        <h2>Want more than a missing-key check?</h2>
+        <p>The free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite GitHub Action</a> fails a CI job when a key from <code>.env.example</code> isn&rsquo;t set. The full <strong>EnvGate CLI</strong> also reports Compose and GitHub Actions keys missing from <code>.env.example</code>, flags placeholder and empty values, extra keys (optionally as errors), and a focused set of high-confidence secret shapes &mdash; locally or in any CI &mdash; with a JSON report and values always redacted.</p>
+        <p><strong>$19 one-time</strong> &middot; Node 18+ &middot; zero runtime dependencies &middot; MIT source included.</p>
+        <p><a class="cta-link" href="../index.html#checks">See what EnvGate checks &rarr;</a></p>
+      </section>
+      <section>
+        <h2>Related guides</h2>
+        <ul>
+          <li><a href="github-actions-empty-secrets.html">GitHub Actions secret is empty: why and how to fail fast</a></li>
+          <li><a href="github-actions-missing-env-vars.html">Catch missing environment variables in GitHub Actions</a></li>
+          <li><a href="validate-env-against-env-example-in-ci.html">Validate .env against .env.example in CI</a></li>
+          <li><a href="dotenv-vs-env-example.html">dotenv vs .env.example: keeping config in sync</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <nav class="family-nav" aria-label="Other tools in this family">
+        <span class="family-label">Also:</span>
+          <a href="https://ess2292.github.io/envgate/" aria-current="page">EnvGate</a>
+          <a href="https://ess2292.github.io/runtimegate/">RuntimeGate</a>
+          <a href="https://ess2292.github.io/lockgate/">LockGate</a>
+          <a href="https://ess2292.github.io/servicegate/">ServiceGate</a>
+      </nav>
+<div class="footer-row">
+        <div>
+          EnvGate 0.2.1 by Emilio Straubel &middot; $19 one-time &middot; MIT source included &middot; no tracking
+        </div>
+        <div class="footer-links">
+          <a href="../index.html">Home</a>
+          <a href="index.html" aria-current="page">Guides</a>
+          <a href="../privacy.html">Privacy</a>
+          <a href="../terms.html">Terms</a>
+          <a href="https://github.com/ESS2292/envgate-action">Lite Action</a>
+          <a href="https://github.com/ESS2292/envgate-action/issues">Issues</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
