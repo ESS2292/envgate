@@ -29,7 +29,7 @@
   <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-17", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-21", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -53,12 +53,16 @@
     <main id="main" class="article">
       <p class="crumbs"><a href="../index.html">EnvGate</a> / <a href="index.html">Guides</a></p>
       <section>
-        <div class="eyebrow">Guide &middot; Updated November 17, 2026</div>
+        <div class="eyebrow">Guide &middot; Updated November 21, 2026</div>
         <h1>Environment variable guides</h1>
         <p class="lead">How to stop missing or misconfigured environment variables from breaking builds and deploys.</p>
         <p>Short, practical guides about keeping environment configuration in sync, so a missing variable fails a check instead of a deploy. Code samples are meant to be copied and run.</p>
       </section>
       <div class="guide-list">
+        <article class="guide-card">
+          <h2><a href="vite-import-meta-env-undefined-in-ci.html">Vite <code>import.meta.env</code> variable undefined in CI: fail the build instead of shipping <code>undefined</code></a></h2>
+          <p>Why a Vite production build inlines undefined or an empty string (the VITE_ prefix, build-time replacement, missing .env, empty GitHub secrets on forks), and three tested ways to fail the build instead.</p>
+        </article>
         <article class="guide-card">
           <h2><a href="docker-compose-variable-is-not-set.html">Docker Compose &ldquo;variable is not set. Defaulting to a blank string&rdquo;: fail CI instead</a></h2>
           <p>Why Compose only warns on an unset ${VAR}, which forms fail and which stay silent, a tested CI step that turns the warning into a failure, and how to keep .env.example in sync with compose.yaml.</p>
