@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jest or Vitest process.env Variable Undefined in CI: .env Not Loaded, Empty Secrets, and Failing Fast — EnvGate Guides</title>
+  <meta name="description" content="Why process.env.X is undefined in Jest or Vitest tests on CI: Jest ignores .env, Vitest only loads VITE_ keys, loaders do nothing without a .env file, and an empty job variable beats .env. Tested fixes that fail the run instead." />
+  <meta name="author" content="Emilio Straubel" />
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://ess2292.github.io/envgate/guides/jest-vitest-process-env-undefined-in-ci.html" />
+  <meta property="og:title" content="Jest or Vitest process.env Variable Undefined in CI: .env Not Loaded, Empty Secrets, and Failing Fast — EnvGate Guides" />
+  <meta property="og:description" content="Why process.env.X is undefined in Jest or Vitest tests on CI: Jest ignores .env, Vitest only loads VITE_ keys, loaders do nothing without a .env file, and an empty job variable beats .env. Tested fixes that fail the run instead." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ess2292.github.io/envgate/guides/jest-vitest-process-env-undefined-in-ci.html" />
+  <meta property="og:site_name" content="EnvGate" />
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="EnvGate — CI-friendly env checker" />
+  <meta property="article:published_time" content="2026-11-25" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Jest or Vitest process.env Variable Undefined in CI: .env Not Loaded, Empty Secrets, and Failing Fast — EnvGate Guides" />
+  <meta name="twitter:description" content="Why process.env.X is undefined in Jest or Vitest tests on CI: Jest ignores .env, Vitest only loads VITE_ keys, loaders do nothing without a .env file, and an empty job variable beats .env. Tested fixes that fail the run instead." />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta name="twitter:image:alt" content="EnvGate — CI-friendly env checker" />
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="stylesheet" href="../styles.css" />
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Jest or Vitest: process.env variable undefined in CI (the .env file is not loaded)", "description": "Why process.env.X is undefined in Jest or Vitest tests on CI: Jest ignores .env, Vitest only loads VITE_ keys, loaders do nothing without a .env file, and an empty job variable beats .env. Tested fixes that fail the run instead.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-25", "dateModified": "2026-11-25", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/jest-vitest-process-env-undefined-in-ci.html"}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="wrap">
+    <nav class="site-nav" aria-label="Primary">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark" aria-hidden="true">eg</span>
+        EnvGate
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html#checks">What it checks</a></li>
+        <li><a href="../index.html#demo">Demo</a></li>
+        <li><a href="../index.html#ci">CI</a></li>
+        <li><a href="../index.html#limits">Limits</a></li>
+        <li><a href="../index.html#pricing">Pricing</a></li>
+        <li><a href="index.html" aria-current="page">Guides</a></li>
+        <li><a href="../index.html#faq">FAQ</a></li>
+        <li><a href="https://github.com/ESS2292/envgate-action">Lite Action</a></li>
+      </ul>
+    </nav>
+    <main id="main" class="article">
+      <p class="crumbs"><a href="../index.html">EnvGate</a> / <a href="index.html">Guides</a></p>
+      <section>
+        <div class="eyebrow">Guide &middot; November 25, 2026</div>
+        <h1>Jest or Vitest: <code>process.env</code> variable undefined in CI (the <code>.env</code> file is not loaded)</h1>
+        <p class="lead">Jest does not read <code>.env</code> at all, and Vitest only exposes <code>VITE_</code>-prefixed keys from it. Add a loader and tests pass locally, but in CI the <code>.env</code> file is gitignored, so the loader quietly loads nothing. Here is what each setup actually does, and how to make a missing or empty variable fail the run with a clear message.</p>
+
+        <p>The usual report: <code>process.env.DATABASE_URL</code> is <code>undefined</code> inside a test, or tests pass on a laptop and fail in GitHub Actions with a connection error that has nothing to do with the code under test.</p>
+        <p>Everything below was run on November 25, 2026 on Linux with Node.js 24.22.1, npm 11.21.1, Vitest 5.1.2 (<code>vitest/5.1.2 linux-x64 node-v24.22.1</code>, which installed Vite 8.3.8), Jest 30.5.2, dotenv 18.0.10, EnvGate 0.2.1, and the EnvGate Lite Action source at tag <code>v1</code> (commit <code>aaae8a9</code>). No GitHub Actions runner was used; where this page describes runner behavior, it quotes GitHub&rsquo;s docs. Output is pasted as printed (ANSI colors stripped), except where a line says it was trimmed.</p>
+
+        <h2>What each test runner does with <code>.env</code></h2>
+        <p>The sample project has this <code>.env</code> next to <code>package.json</code>, and no config file:</p>
+        <pre class="code-block"><code>DATABASE_URL=postgres://app@localhost/app
+VITE_API_URL=http://localhost:3000</code></pre>
+        <p><strong>Vitest 5.1.2.</strong> A test that logs both keys from <code>process.env</code> and <code>import.meta.env</code>:</p>
+        <pre class="code-block"><code>$ npx vitest run
+stdout | test/env.test.js &gt; env
+process.env.DATABASE_URL = undefined
+process.env.VITE_API_URL = "http://localhost:3000"
+import.meta.env.DATABASE_URL = undefined
+import.meta.env.VITE_API_URL = "http://localhost:3000"
+MODE = test
+(assertion output trimmed)
+ Test Files  1 failed (1)
+exit=1</code></pre>
+        <p>Vitest runs in mode <code>test</code> and loaded the <code>.env</code> file, but only the <code>VITE_</code> key reached the test, on both <code>process.env</code> and <code>import.meta.env</code>. A <code>.env.test</code> file behaved the same way: <code>VITE_TEST_ONLY</code> from it was loaded, an unprefixed key next to it was not. That matches the <a href="https://vite.dev/guide/env-and-mode">Vite env docs</a>, where only prefixed keys are exposed; the Vitest config docs do not say this directly, so treat it as observed behavior for these versions.</p>
+        <p><strong>Jest 30.5.2.</strong> The same <code>.env</code>, a test that logs the key:</p>
+        <pre class="code-block"><code>$ npx jest
+  console.log
+    DATABASE_URL = undefined NODE_ENV = test
+(assertion output trimmed)
+Tests:       1 failed, 1 total
+exit=1</code></pre>
+        <p>Jest set <code>NODE_ENV</code> to <code>test</code> and did not read <code>.env</code>. Nothing in Jest loads it unless you add a loader.</p>
+
+        <h2>The three common loaders, and what they do in CI</h2>
+        <p>Each of these fixed the local run (the test passed with the <code>.env</code> above). Then the <code>.env</code> file was removed, which is what a clean CI checkout looks like when <code>.env</code> is in <code>.gitignore</code>:</p>
+        <table class="compare">
+          <thead><tr><th>Loader</th><th>Local, <code>.env</code> present</th><th>CI, no <code>.env</code></th></tr></thead>
+          <tbody>
+            <tr><td>Vitest: <code>test: { env: loadEnv(mode, process.cwd(), '') }</code></td><td>pass</td><td>tests run with <code>DATABASE_URL</code> undefined; no warning</td></tr>
+            <tr><td>Jest or Vitest: <code>setupFiles: ['dotenv/config']</code></td><td>pass</td><td>tests run with <code>DATABASE_URL</code> undefined; no warning</td></tr>
+            <tr><td><code>node --env-file=.env node_modules/vitest/vitest.mjs run</code> (and the same for Jest&rsquo;s <code>bin/jest.js</code>)</td><td>pass</td><td>Node exits 9 before any test runs: <code>/usr/local/lib/nodejs/node: .env: not found</code></td></tr>
+            <tr><td><code>node --env-file-if-exists=.env &hellip;</code></td><td>pass</td><td>tests run with <code>DATABASE_URL</code> undefined; no warning</td></tr>
+          </tbody>
+        </table>
+        <p>The <code>loadEnv(mode, process.cwd(), '')</code> form comes from the <a href="https://vite.dev/config/">Vite config docs</a> (&ldquo;Set the third parameter to '' to load all env regardless of the <code>VITE_</code> prefix&rdquo;, vitejs/vite <code>docs/config/index.md</code> at <code>86bf306</code>), and Vitest&rsquo;s <a href="https://vitest.dev/config/env"><code>test.env</code></a> puts those values on <code>process.env</code> and <code>import.meta.env</code> during tests. The Node docs for v24.22.1 say of <code>--env-file</code>: &ldquo;An error is thrown if the file does not exist.&rdquo; That error is the only loud failure in the table, and it fails for the wrong reason: the job may set every variable correctly and still die because the file is missing.</p>
+        <p>So the loaders all work the same way: when <code>.env</code> is there they fill <code>process.env</code>, and when it is not they do nothing (or, with <code>--env-file</code>, fail on the file instead). In CI the values have to come from the job&rsquo;s environment.</p>
+
+        <h2>The empty-variable trap: an empty job variable beats <code>.env</code></h2>
+        <p>None of these loaders overwrite a variable that already exists, even when it is an empty string. The dotenv README (18.0.10) says: &ldquo;By default, we will never modify any environment variables that have already been set.&rdquo; The <a href="https://vite.dev/guide/env-and-mode">Vite docs</a> say variables that already exist when Vite runs &ldquo;have the highest priority and will not be overwritten by <code>.env</code> files.&rdquo; Node&rsquo;s <code>--env-file</code> docs: &ldquo;If the same variable is defined in the environment and in the file, the value from the environment takes precedence.&rdquo;</p>
+        <p>Tested with <code>DATABASE_URL=postgres://app@localhost/app</code> in <code>.env</code>:</p>
+        <pre class="code-block"><code># Jest with setupFiles: ['dotenv/config']
+$ DATABASE_URL= npx jest
+    DATABASE_URL = "" NODE_ENV = test
+Tests:       1 failed, 1 total
+
+# Vitest with test.env = loadEnv(mode, process.cwd(), '')
+$ DATABASE_URL= npx vitest run
+process.env.DATABASE_URL = ""
+ Test Files  1 failed (1)</code></pre>
+        <p>This matters in GitHub Actions because of how secrets expand. GitHub&rsquo;s <a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets">secrets docs</a> (github/docs at <code>73e24e6</code>): &ldquo;If a secret has not been set, the return value of an expression referencing the secret &hellip; will be an empty string,&rdquo; and &ldquo;With the exception of <code>GITHUB_TOKEN</code>, secrets are not passed to the runner when a workflow is triggered from a forked repository.&rdquo; A line like <code>DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}</code> therefore sets <code>DATABASE_URL</code> to <code>""</code> on fork pull requests or when the secret is misnamed, and that empty value wins over any committed <code>.env.test</code>. (The runner behavior is quoted from the docs; the precedence was tested locally as shown.)</p>
+
+        <h2>Fix 1: a setup file that fails on missing or empty keys</h2>
+        <p>Keep the loader for local runs, and add a second setup file that reads <code>.env.example</code> and throws if any listed key is unset or blank. Setup files run in order, so the check sees whatever the loader added.</p>
+        <p>Vitest (<code>test/require-env.js</code>, project with <code>"type": "module"</code>):</p>
+        <pre class="code-block"><code>// Fail the run if a key listed in .env.example is unset or blank.
+import { readFileSync } from 'node:fs'
+
+const keys = readFileSync('.env.example', 'utf8')
+  .split(/\r?\n/)
+  .map((l) =&gt; l.trim())
+  .filter((l) =&gt; l &amp;&amp; !l.startsWith('#'))
+  .map((l) =&gt; l.replace(/^export\s+/, '').split('=')[0].trim())
+
+const missing = keys.filter((k) =&gt; !process.env[k] || !process.env[k].trim())
+if (missing.length) {
+  throw new Error(`Missing test env: ${missing.join(', ')} (listed in .env.example)`)
+}</code></pre>
+        <pre class="code-block"><code>// vitest.config.js
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    setupFiles: ['dotenv/config', './test/require-env.js'],
+  },
+})</code></pre>
+        <p>For Jest, the same file as CommonJS (<code>test/require-env.cjs</code>, with <code>const { readFileSync } = require('node:fs')</code> as the only change) and:</p>
+        <pre class="code-block"><code>// jest.config.js
+module.exports = {
+  setupFiles: ['dotenv/config', '&lt;rootDir&gt;/test/require-env.cjs'],
+}</code></pre>
+        <p><code>.env.example</code> lists <code>DATABASE_URL</code>, <code>JWT_SECRET</code>, and <code>REDIS_URL</code>. Results, with no <code>.env</code>, <code>DATABASE_URL</code> set, <code>JWT_SECRET</code> set to an empty string, and <code>REDIS_URL</code> unset:</p>
+        <pre class="code-block"><code>$ npx jest
+FAIL __tests__/env.test.js
+  ● Test suite failed to run
+
+    Missing test env: JWT_SECRET, REDIS_URL (listed in .env.example)
+
+(code frame trimmed)
+      at Object.&lt;anonymous&gt; (test/require-env.cjs:12:9)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+exit=1
+
+$ npx vitest run
+ FAIL  test/env.test.js [ test/env.test.js ]
+Error: Missing test env: JWT_SECRET, REDIS_URL (listed in .env.example)
+ ❯ test/require-env.js:12:9
+(code frame trimmed)
+ Test Files  1 failed (1)
+      Tests  no tests
+exit=1</code></pre>
+        <p>Other cases, same for both runners: all three keys set in the environment, exit 0; a complete local <code>.env</code> and nothing in the shell, exit 0; a complete <code>.env</code> plus <code>JWT_SECRET=</code> in the shell, exit 1 with <code>Missing test env: JWT_SECRET</code> (the empty-variable trap, now caught). Two limits: setup files run once per test file, so a suite with 40 files prints the error 40 times, and the simple parser above does not handle quoted keys or <code>KEY = value</code> with odd spacing beyond trimming.</p>
+
+        <h2>Fix 2: check the job environment before the tests start</h2>
+        <p>In GitHub Actions, put the values at job level so the check and the test step see the same environment, then run the free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite</a> Action before <code>npm ci</code>:</p>
+        <pre class="code-block"><code>jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      REDIS_URL: ${{ vars.REDIS_URL }}
+      MAILER_API_KEY: ${{ secrets.MAILER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ESS2292/envgate-action@v1
+        with:
+          example: .env.example
+          fail-on-empty: "true"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npx jest</code></pre>
+        <p>Run locally through the action&rsquo;s own <code>run()</code> entry point at <code>v1</code>, with the action inputs passed as <code>INPUT_*</code> variables the way the runner does, <code>DATABASE_URL</code> set, <code>JWT_SECRET</code> empty, and <code>REDIS_URL</code> unset:</p>
+        <pre class="code-block"><code>::error title=Missing env key::REDIS_URL is listed in .env.example but is not set
+::error title=Empty env key::JWT_SECRET is set but empty
+EnvGate Lite: 1 missing, 1 empty (of 3).
+Full EnvGate CLI (placeholders, extra keys, secret shapes, JSON): https://ess2292.github.io/envgate/
+exit=1</code></pre>
+        <p>With <code>fail-on-empty</code> left at its default (<code>"false"</code>), the same environment reported only <code>REDIS_URL</code> (<code>1 missing, 0 empty</code>); the empty <code>JWT_SECRET</code> passed. With all three keys non-empty it printed <code>EnvGate Lite: OK, 3 key(s) present.</code> and returned 0. As with the setup file, decide what should happen on fork pull requests, where secret-backed keys are always empty.</p>
+
+        <h2>Keep <code>.env.example</code> in step with the workflow</h2>
+        <p>Both fixes only check keys that <code>.env.example</code> lists. The workflow above passes <code>MAILER_API_KEY</code>, which the example file does not mention. The EnvGate CLI reads workflow <code>env:</code> blocks and reports that. Scan mode in the sample repo (no <code>.env</code>):</p>
+        <pre class="code-block"><code>$ envgate check
+EnvGate check
+  examples: .env.example
+  env:      (none)
+  workflows: .github/workflows/test.yml
+
+Warnings (1):
+  [actions_undocumented] MAILER_API_KEY: GitHub Actions env "MAILER_API_KEY" in .github/workflows/test.yml is passed from secrets or vars, but is not listed in any example file.
+
+PASS — no violations.
+(1 warning)
+exit=0</code></pre>
+        <p>To check the job environment with the CLI, use pair mode with an empty file and <code>--from-env</code>. Same environment as the Lite run (<code>JWT_SECRET</code> empty, <code>REDIS_URL</code> unset):</p>
+        <pre class="code-block"><code>$ envgate check --env /dev/null --example .env.example --from-env
+EnvGate check
+  example: .env.example
+  env:     ../../../dev/null
+
+Errors (1):
+  [missing_key] REDIS_URL: Missing key "REDIS_URL" (required by .env.example)
+
+Warnings (1):
+  [actions_undocumented] MAILER_API_KEY: GitHub Actions env "MAILER_API_KEY" in .github/workflows/test.yml is passed from secrets or vars, but is not listed in any example file.
+
+FAIL — 1 error, 1 warning.
+exit=1</code></pre>
+        <p>Note what it did not report: the empty <code>JWT_SECRET</code>. See below.</p>
+
+        <h2>What EnvGate does not catch</h2>
+        <ul>
+          <li><strong>The CLI&rsquo;s <code>--from-env</code> counts an empty value as present.</strong> In the run above, <code>JWT_SECRET=""</code> passed. For empty secrets and fork pull requests, use Lite with <code>fail-on-empty: "true"</code> or the setup-file check.</li>
+          <li><strong>Scan mode with no <code>.env</code> checks no values.</strong> In a clean checkout, plain <code>envgate check</code> printed <code>PASS — no violations.</code> with nothing set, because a missing sibling <code>.env</code> is not an error in scan mode. It still reported the workflow key missing from <code>.env.example</code>.</li>
+          <li><strong>It does not know how your test runner loads env.</strong> Neither the CLI nor Lite knows that Jest ignores <code>.env</code>, that Vitest only passes <code>VITE_</code> keys, or that <code>dotenv/config</code> is missing from <code>setupFiles</code>. With a complete local <code>.env</code>, <code>envgate check</code> passed (<code>env: .env</code>) even though Jest without a loader would still see <code>undefined</code>.</li>
+          <li><strong>Lite reads the job environment, not <code>.env</code>, unless you pass <code>env-file</code>.</strong> With a complete <code>.env</code> in the directory and nothing in the environment, Lite reported all three keys missing. That is correct for CI, but it means Lite is not a local check of your <code>.env</code> file.</li>
+          <li><strong>It does not read test code.</strong> A test that uses <code>process.env.SOME_KEY</code> not listed in <code>.env.example</code> is invisible to both tools. Only keys in the example file (and, for the CLI, in workflow <code>env:</code> blocks and Compose files) are checked.</li>
+          <li><strong>Some workflow file names are skipped.</strong> EnvGate 0.2.1 does not read <code>env:</code> blocks from workflows it treats as tooling (for example <code>build.yml</code>, <code>lock.yml</code>, or names containing <code>release</code> or <code>publish</code>). The sample used <code>test.yml</code>, which is read.</li>
+          <li><strong>Present is not correct.</strong> A non-empty <code>DATABASE_URL</code> that points at the wrong database passes every check on this page.</li>
+        </ul>
+
+      </section>
+      <section class="cta-box" aria-label="EnvGate">
+        <h2>Want more than a missing-key check?</h2>
+        <p>The free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite GitHub Action</a> fails a CI job when a key from <code>.env.example</code> isn&rsquo;t set. The full <strong>EnvGate CLI</strong> also reports GitHub Actions and Compose keys missing from <code>.env.example</code>, flags placeholder and empty values, extra keys (optionally as errors), and a focused set of high-confidence secret shapes &mdash; locally or in any CI &mdash; with a JSON report and values always redacted.</p>
+        <p><strong>$19 one-time</strong> &middot; Node 18+ &middot; zero runtime dependencies &middot; MIT source included.</p>
+        <p><a class="cta-link" href="../index.html#checks">See what EnvGate checks &rarr;</a></p>
+      </section>
+      <section>
+        <h2>Related guides</h2>
+        <ul>
+          <li><a href="github-actions-empty-secrets.html">GitHub Actions secret is empty: why and how to fail fast</a></li>
+          <li><a href="dotenv-vs-env-example.html">dotenv vs .env.example: keeping config in sync</a></li>
+          <li><a href="vite-import-meta-env-undefined-in-ci.html">Vite <code>import.meta.env</code> variable undefined in CI: fail the build instead of shipping <code>undefined</code></a></li>
+          <li><a href="validate-env-against-env-example-in-ci.html">Validate .env against .env.example in CI</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <nav class="family-nav" aria-label="Other tools in this family">
+        <span class="family-label">Also:</span>
+          <a href="https://ess2292.github.io/envgate/" aria-current="page">EnvGate</a>
+          <a href="https://ess2292.github.io/runtimegate/">RuntimeGate</a>
+          <a href="https://ess2292.github.io/lockgate/">LockGate</a>
+          <a href="https://ess2292.github.io/servicegate/">ServiceGate</a>
+      </nav>
+<div class="footer-row">
+        <div>
+          EnvGate 0.2.1 by Emilio Straubel &middot; $19 one-time &middot; MIT source included &middot; no tracking
+        </div>
+        <div class="footer-links">
+          <a href="../index.html">Home</a>
+          <a href="index.html" aria-current="page">Guides</a>
+          <a href="../privacy.html">Privacy</a>
+          <a href="../terms.html">Terms</a>
+          <a href="https://github.com/ESS2292/envgate-action">Lite Action</a>
+          <a href="https://github.com/ESS2292/envgate-action/issues">Issues</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
