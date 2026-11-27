@@ -29,7 +29,7 @@
   <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-25", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Environment variable guides", "description": "Practical guides for validating .env files against .env.example in CI, catching missing or empty GitHub Actions secrets, preventing Node.js deploy failures, comparing EnvGate Lite, the CLI, dotenv, and schema validators, and running EnvGate, RuntimeGate, and LockGate Lite in one workflow.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-10", "dateModified": "2026-11-27", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/"}</script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -53,12 +53,16 @@
     <main id="main" class="article">
       <p class="crumbs"><a href="../index.html">EnvGate</a> / <a href="index.html">Guides</a></p>
       <section>
-        <div class="eyebrow">Guide &middot; Updated November 25, 2026</div>
+        <div class="eyebrow">Guide &middot; Updated November 27, 2026</div>
         <h1>Environment variable guides</h1>
         <p class="lead">How to stop missing or misconfigured environment variables from breaking builds and deploys.</p>
         <p>Short, practical guides about keeping environment configuration in sync, so a missing variable fails a check instead of a deploy. Code samples are meant to be copied and run.</p>
       </section>
       <div class="guide-list">
+        <article class="guide-card">
+          <h2><a href="python-os-environ-keyerror-pytest-ci.html">Python <code>KeyError</code> from <code>os.environ</code> in pytest on CI (the <code>.env</code> file is not loaded)</a></h2>
+          <p>Why pytest fails on CI with KeyError: 'DATABASE_URL' (pytest ignores .env; load_dotenv, pytest-dotenv and pydantic-settings load nothing without the file; an empty GitHub secret beats .env), and tested conftest.py, pydantic and CI checks that stop the run instead.</p>
+        </article>
         <article class="guide-card">
           <h2><a href="jest-vitest-process-env-undefined-in-ci.html">Jest or Vitest: <code>process.env</code> variable undefined in CI (the <code>.env</code> file is not loaded)</a></h2>
           <p>Why tests see undefined in CI (Jest ignores .env, Vitest only loads VITE_ keys, dotenv and loadEnv do nothing without a .env file, an empty job variable beats .env), and tested setup-file and CI checks that fail the run instead.</p>

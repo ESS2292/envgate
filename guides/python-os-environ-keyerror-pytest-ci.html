@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Python KeyError from os.environ in pytest on CI: .env Not Loaded, Empty Secrets, and Failing Fast — EnvGate Guides</title>
+  <meta name="description" content="Why pytest fails on CI with KeyError: 'DATABASE_URL' from os.environ: pytest ignores .env, load_dotenv, pytest-dotenv and pydantic-settings load nothing without the file, and an empty GitHub secret beats .env. Tested fixes that stop the run instead." />
+  <meta name="author" content="Emilio Straubel" />
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://ess2292.github.io/envgate/guides/python-os-environ-keyerror-pytest-ci.html" />
+  <meta property="og:title" content="Python KeyError from os.environ in pytest on CI: .env Not Loaded, Empty Secrets, and Failing Fast — EnvGate Guides" />
+  <meta property="og:description" content="Why pytest fails on CI with KeyError: 'DATABASE_URL' from os.environ: pytest ignores .env, load_dotenv, pytest-dotenv and pydantic-settings load nothing without the file, and an empty GitHub secret beats .env. Tested fixes that stop the run instead." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ess2292.github.io/envgate/guides/python-os-environ-keyerror-pytest-ci.html" />
+  <meta property="og:site_name" content="EnvGate" />
+  <meta property="og:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="EnvGate — CI-friendly env checker" />
+  <meta property="article:published_time" content="2026-11-27" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Python KeyError from os.environ in pytest on CI: .env Not Loaded, Empty Secrets, and Failing Fast — EnvGate Guides" />
+  <meta name="twitter:description" content="Why pytest fails on CI with KeyError: 'DATABASE_URL' from os.environ: pytest ignores .env, load_dotenv, pytest-dotenv and pydantic-settings load nothing without the file, and an empty GitHub secret beats .env. Tested fixes that stop the run instead." />
+  <meta name="twitter:image" content="https://ess2292.github.io/envgate/og-image.png" />
+  <meta name="twitter:image:alt" content="EnvGate — CI-friendly env checker" />
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="stylesheet" href="../styles.css" />
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Python KeyError from os.environ in pytest on CI (the .env file is not loaded)", "description": "Why pytest fails on CI with KeyError: 'DATABASE_URL' from os.environ: pytest ignores .env, load_dotenv, pytest-dotenv and pydantic-settings load nothing without the file, and an empty GitHub secret beats .env. Tested fixes that stop the run instead.", "author": {"@type": "Person", "name": "Emilio Straubel"}, "datePublished": "2026-11-27", "dateModified": "2026-11-27", "mainEntityOfPage": "https://ess2292.github.io/envgate/guides/python-os-environ-keyerror-pytest-ci.html"}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="wrap">
+    <nav class="site-nav" aria-label="Primary">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark" aria-hidden="true">eg</span>
+        EnvGate
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html#checks">What it checks</a></li>
+        <li><a href="../index.html#demo">Demo</a></li>
+        <li><a href="../index.html#ci">CI</a></li>
+        <li><a href="../index.html#limits">Limits</a></li>
+        <li><a href="../index.html#pricing">Pricing</a></li>
+        <li><a href="index.html" aria-current="page">Guides</a></li>
+        <li><a href="../index.html#faq">FAQ</a></li>
+        <li><a href="https://github.com/ESS2292/envgate-action">Lite Action</a></li>
+      </ul>
+    </nav>
+    <main id="main" class="article">
+      <p class="crumbs"><a href="../index.html">EnvGate</a> / <a href="index.html">Guides</a></p>
+      <section>
+        <div class="eyebrow">Guide &middot; November 27, 2026</div>
+        <h1>Python <code>KeyError</code> from <code>os.environ</code> in pytest on CI (the <code>.env</code> file is not loaded)</h1>
+        <p class="lead">pytest does not read <code>.env</code>. Add <code>load_dotenv()</code>, pytest-dotenv, or pydantic-settings and the tests pass on your machine, but in CI the <code>.env</code> file is gitignored, so each of them quietly loads nothing. Then an empty GitHub secret gets past the <code>KeyError</code> entirely. Here is what each setup actually does, and how to make a missing or empty variable stop the run with a clear message.</p>
+
+        <p>The usual report: the job dies with <code>ERROR collecting tests/...</code> and <code>KeyError: 'DATABASE_URL'</code>, or <code>pydantic_core._pydantic_core.ValidationError: ... Field required</code>, while the same tests pass locally.</p>
+        <p>Everything below was run on November 27, 2026 on Linux with Python 3.13.5, pytest 9.2.0, python-dotenv 1.2.4, pydantic-settings 2.16.3 (pydantic 2.14.4), pytest-dotenv 0.5.2, uv 0.13.9, Node.js 24.22.1 for EnvGate 0.2.1, and the EnvGate Lite Action source at tag <code>v1</code> (commit <code>aaae8a9</code>). No GitHub Actions runner was used; where this page describes runner behavior, it quotes GitHub&rsquo;s docs. Output is pasted as printed, except where a line says it was trimmed.</p>
+
+        <h2>The error: pytest never reads <code>.env</code></h2>
+        <p>The sample project reads two required keys at import time and one optional key:</p>
+        <pre class="code-block"><code># app/config.py
+import os
+
+DATABASE_URL = os.environ["DATABASE_URL"]
+JWT_SECRET = os.environ["JWT_SECRET"]
+REDIS_URL = os.getenv("REDIS_URL")</code></pre>
+        <p>A <code>.env</code> with all three keys sits next to <code>pytest.ini</code>. No loader, nothing exported in the shell:</p>
+        <pre class="code-block"><code>$ pytest -q
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_config.py _____________________
+tests/test_config.py:1: in &lt;module&gt;
+    from app import config
+app/config.py:3: in &lt;module&gt;
+    DATABASE_URL = os.environ["DATABASE_URL"]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen os&gt;:717: in __getitem__
+    ???
+E   KeyError: 'DATABASE_URL'
+=========================== short test summary info ============================
+ERROR tests/test_config.py - KeyError: 'DATABASE_URL'
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.04s
+exit=2</code></pre>
+        <p>The <code>.env</code> file was right there and pytest ignored it. Because the lookup runs at import time, it fails during collection, before any test runs, and pytest exits 2 (&ldquo;Interrupted&rdquo;), not 1. <code>os.environ</code> is a plain mapping of the process environment, so a missing key raises <code>KeyError</code>. <code>os.getenv</code> does not: the Python docs (cpython <code>Doc/library/os.rst</code> at <code>v3.13.5</code>, <code>6cb20a2</code>) say it returns &ldquo;the value of the environment variable <em>key</em> as a string if it exists, or <em>default</em> if it doesn&rsquo;t&rdquo;, and the default is <code>None</code>. With <code>REDIS_URL</code> unset, <code>config.REDIS_URL</code> printed <code>REDIS_URL = None</code> with no error, so that failure shows up later, wherever the value is first used.</p>
+
+        <h2>The common loaders, and what they do in CI</h2>
+        <p>Each of these fixed the local run (the test passed with the <code>.env</code> above). Then the <code>.env</code> file was removed, which is what a clean CI checkout looks like when <code>.env</code> is in <code>.gitignore</code>:</p>
+        <table class="compare">
+          <thead><tr><th>Loader</th><th>Local, <code>.env</code> present</th><th>CI, no <code>.env</code></th></tr></thead>
+          <tbody>
+            <tr><td><code>load_dotenv()</code> in <code>conftest.py</code></td><td>pass (returned <code>True</code>)</td><td>returned <code>False</code>, no warning; same <code>KeyError: 'DATABASE_URL'</code> during collection, exit 2</td></tr>
+            <tr><td>pytest-dotenv with <code>env_files = .env</code> in <code>pytest.ini</code></td><td>pass</td><td>no warning; same <code>KeyError</code>, exit 2</td></tr>
+            <tr><td>pydantic-settings <code>BaseSettings</code> with <code>env_file=".env"</code></td><td>pass</td><td>no warning about the file; <code>ValidationError: 2 validation errors for Settings</code> &hellip; <code>Field required [type=missing, ...]</code>, exit 1</td></tr>
+            <tr><td><code>uv run --env-file .env pytest</code></td><td>pass</td><td><code>error: No environment file found at: .env</code>, exit 2, before pytest starts</td></tr>
+          </tbody>
+        </table>
+        <p>The python-dotenv source at <code>v1.2.4</code> (<code>a565c2c</code>, <code>src/dotenv/main.py</code>) documents the return value as &ldquo;True if at least one environment variable is set else False&rdquo;. Its <code>verbose</code> option is described as &ldquo;Whether to output a warning the .env file is missing&rdquo;, but in that version the missing-file message is logged at <code>INFO</code> level, so <code>load_dotenv('.env', verbose=True)</code> with no file printed nothing here (it just returned <code>False</code>) unless logging is configured to show <code>INFO</code>.</p>
+        <p>pydantic-settings fails loudly, which is good, but for the wrong reason in CI: the message says the field is required, not that the job never set it. The <code>uv run --env-file</code> error is the only loader failure that names the file, and it fails even when the job sets every variable correctly, because the file is missing.</p>
+        <p>So all of these work the same way: when <code>.env</code> is there they fill the environment, and when it is not they do nothing (or, with <code>uv --env-file</code>, fail on the file). In CI the values have to come from the job&rsquo;s environment.</p>
+
+        <h2>The empty-variable trap: <code>""</code> is not a <code>KeyError</code></h2>
+        <p>An environment variable set to an empty string exists, so <code>os.environ["JWT_SECRET"]</code> returns <code>''</code> and nothing raises. And the loaders do not replace it. The python-dotenv README (1.2.4) says <code>load_dotenv()</code> will &ldquo;<strong>Not override</strong> existing environment variables (<code>override=False</code>)&rdquo;. The pydantic-settings docs (<code>docs/index.md</code> at <code>v2.16.3</code>, <code>50e676c</code>): &ldquo;environment variables will always take priority over values loaded from a dotenv file&rdquo;, and &ldquo;By default environment variables are parsed verbatim, including if the value is empty.&rdquo;</p>
+        <p>Tested with a complete <code>.env</code> present (for the pytest run, a second test prints both values):</p>
+        <pre class="code-block"><code># conftest.py: load_dotenv()
+$ DATABASE_URL= JWT_SECRET= pytest -q -s
+load_dotenv() returned True
+DATABASE_URL = '' JWT_SECRET = ''
+(progress dots and traceback trimmed)
+FAILED tests/test_config.py::test_database_url - AssertionError: assert False
+1 failed, 1 passed in 0.01s
+exit=1
+
+# pydantic-settings, env_file=".env", plain str fields
+$ JWT_SECRET= python ps/settings.py
+database_url = 'postgres://app@localhost/app' jwt_secret = ''
+exit=0</code></pre>
+        <p>The loader returned <code>True</code> and still left both values empty. pydantic-settings accepted an empty <code>jwt_secret</code> as a valid <code>str</code>, with or without a <code>.env</code> file.</p>
+        <p>This matters in GitHub Actions because of how secrets expand. GitHub&rsquo;s <a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets">secrets docs</a> (github/docs at <code>73e24e6</code>): &ldquo;If a secret has not been set, the return value of an expression referencing the secret &hellip; will be an empty string.&rdquo; The same page: &ldquo;With the exception of <code>GITHUB_TOKEN</code>, secrets are not passed to the runner when a workflow is triggered from a forked repository.&rdquo; A line like <code>JWT_SECRET: ${{ secrets.JWT_SECRET }}</code> therefore sets <code>JWT_SECRET</code> to <code>""</code> on fork pull requests or when the secret is misnamed, and your tests run with an empty key instead of failing on it. (The runner behavior is quoted from the docs; the precedence was tested locally as shown.)</p>
+
+        <h2>Fix 1: a <code>conftest.py</code> that stops pytest before collection</h2>
+        <p>Keep <code>load_dotenv</code> for local runs, and check every key that <code>.env.example</code> lists in <code>pytest_configure</code>, which runs before collection. Put this <code>conftest.py</code> in the repo root:</p>
+        <pre class="code-block"><code># conftest.py (repo root): fail before collection if a key from .env.example is unset or blank.
+import os
+from pathlib import Path
+
+import pytest
+from dotenv import load_dotenv
+
+ROOT = Path(__file__).parent
+load_dotenv(ROOT / ".env")  # local runs; does nothing if .env is absent
+
+
+def pytest_configure(config):
+    keys = []
+    for line in (ROOT / ".env.example").read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        line = line.removeprefix("export ").strip()
+        keys.append(line.split("=", 1)[0].strip())
+    missing = [k for k in keys if not os.environ.get(k, "").strip()]
+    if missing:
+        raise pytest.UsageError(
+            f"Missing test env: {', '.join(missing)} (listed in .env.example)"
+        )</code></pre>
+        <p><code>.env.example</code> lists <code>DATABASE_URL</code>, <code>JWT_SECRET</code>, and <code>REDIS_URL</code>. With no <code>.env</code>, <code>DATABASE_URL</code> set, <code>JWT_SECRET</code> set to an empty string, and <code>REDIS_URL</code> unset:</p>
+        <pre class="code-block"><code>$ pytest -q
+ERROR: Missing test env: JWT_SECRET, REDIS_URL (listed in .env.example)
+
+exit=4</code></pre>
+        <p>Other cases: all three keys set in the environment, <code>1 passed</code>, exit 0; a complete local <code>.env</code> and nothing in the shell, exit 0; a complete <code>.env</code> plus <code>JWT_SECRET=</code> in the shell, exit 4 with <code>Missing test env: JWT_SECRET</code> (the empty-variable trap, now caught); <code>JWT_SECRET</code> set to spaces, also exit 4. Exit 4 is pytest&rsquo;s documented code for a &ldquo;pytest command line usage error&rdquo; (pytest <code>doc/en/reference/exit-codes.rst</code> at <code>9.2.0</code>, <code>ae1d0ff</code>), so CI treats it as a failure.</p>
+        <p>Two details that came from testing. The first version used <code>Path(".env.example")</code>, and running <code>pytest</code> from the <code>tests/</code> directory crashed with <code>INTERNALERROR</code> &hellip; <code>FileNotFoundError: [Errno 2] No such file or directory: '.env.example'</code> (exit 3); anchoring both paths to <code>Path(__file__).parent</code> fixed that, and the same checks passed from <code>tests/</code>. And the parser is deliberately simple: it does not handle quoted keys or other unusual <code>.env.example</code> syntax beyond trimming and <code>export</code>.</p>
+
+        <h2>Fix 2 (pydantic-settings): reject empty values in the model</h2>
+        <p>If your config already lives in <code>BaseSettings</code>, make empty strings invalid there:</p>
+        <pre class="code-block"><code>from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
+    database_url: str = Field(min_length=1)
+    jwt_secret: str = Field(min_length=1)
+    redis_url: str = "redis://localhost:6379/0"</code></pre>
+        <pre class="code-block"><code>$ JWT_SECRET= python ps/settings_strict.py
+(traceback trimmed)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+jwt_secret
+  String should have at least 1 character [type=string_too_short, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/string_too_short
+exit=1</code></pre>
+        <p>The other option in the docs, <code>env_ignore_empty=True</code>, treats an empty variable as unset. In a clean checkout that turned <code>JWT_SECRET=</code> into <code>Field required [type=missing, ...]</code>, exit 1. But with a <code>.env</code> present it fell back to the file&rsquo;s value and passed, so it hides an empty job variable on any machine that has a <code>.env</code>. Neither option caught <code>JWT_SECRET</code> set to spaces: <code>min_length=1</code> plus <code>env_ignore_empty=True</code> printed <code>ok</code> for <code>JWT_SECRET='  '</code>.</p>
+
+        <h2>Fix 3: check the job environment before installing anything</h2>
+        <p>In GitHub Actions, put the values at job level so the check and the test step see the same environment, then run the free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite</a> Action first:</p>
+        <pre class="code-block"><code>jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      REDIS_URL: ${{ vars.REDIS_URL }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ESS2292/envgate-action@v1
+        with:
+          example: .env.example
+          fail-on-empty: "true"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install pytest python-dotenv
+      - run: pytest</code></pre>
+        <p>Run locally through the action&rsquo;s own <code>run()</code> entry point at <code>v1</code>, with the action inputs passed as <code>INPUT_*</code> variables the way the runner does, <code>DATABASE_URL</code> set, <code>JWT_SECRET</code> empty, and <code>REDIS_URL</code> unset:</p>
+        <pre class="code-block"><code>::error title=Missing env key::REDIS_URL is listed in .env.example but is not set
+::error title=Empty env key::JWT_SECRET is set but empty
+EnvGate Lite: 1 missing, 1 empty (of 3).
+Full EnvGate CLI (placeholders, extra keys, secret shapes, JSON): https://ess2292.github.io/envgate/
+exit=1</code></pre>
+        <p>With <code>fail-on-empty</code> left at its default (<code>"false"</code>), the same environment reported only <code>REDIS_URL</code> (<code>1 missing, 0 empty</code>); the empty <code>JWT_SECRET</code> passed. <code>JWT_SECRET</code> set to spaces was reported as empty with <code>fail-on-empty: "true"</code>. With all three keys non-empty it printed <code>EnvGate Lite: OK, 3 key(s) present.</code> and returned 0. As with the <code>conftest.py</code> check, decide what should happen on fork pull requests, where secret-backed keys are always empty.</p>
+
+        <h2>Keep <code>.env.example</code> in step with the workflow</h2>
+        <p>Every fix above only checks keys that <code>.env.example</code> (or the settings model) lists. The workflow passes <code>SENTRY_DSN</code>, which the example file does not mention. The EnvGate CLI reads workflow <code>env:</code> blocks and reports that. Scan mode in the sample repo (no <code>.env</code>):</p>
+        <pre class="code-block"><code>$ envgate check
+EnvGate check
+  examples: .env.example
+  env:      (none)
+  workflows: .github/workflows/test.yml
+
+Warnings (1):
+  [actions_undocumented] SENTRY_DSN: GitHub Actions env "SENTRY_DSN" in .github/workflows/test.yml is passed from secrets or vars, but is not listed in any example file.
+
+PASS — no violations.
+(1 warning)
+exit=0</code></pre>
+        <p>To check the job environment with the CLI, use pair mode with an empty file and <code>--from-env</code>. Same environment as the Lite run (<code>JWT_SECRET</code> empty, <code>REDIS_URL</code> unset):</p>
+        <pre class="code-block"><code>$ envgate check --env /dev/null --example .env.example --from-env
+EnvGate check
+  example: .env.example
+  env:     ../../../dev/null
+
+Errors (1):
+  [missing_key] REDIS_URL: Missing key "REDIS_URL" (required by .env.example)
+
+Warnings (1):
+  [actions_undocumented] SENTRY_DSN: GitHub Actions env "SENTRY_DSN" in .github/workflows/test.yml is passed from secrets or vars, but is not listed in any example file.
+
+FAIL — 1 error, 1 warning.
+exit=1</code></pre>
+        <p>Note what it did not report: the empty <code>JWT_SECRET</code>. For a local <code>.env</code> file, the CLI does check values. With <code>JWT_SECRET=</code> and <code>REDIS_URL=changeme</code> in <code>.env</code>:</p>
+        <pre class="code-block"><code>$ envgate check
+(header trimmed)
+Errors (2):
+  [placeholder] JWT_SECRET: Placeholder / empty value for "JWT_SECRET" in .env: empty value
+  [placeholder] REDIS_URL: Placeholder / empty value for "REDIS_URL" in .env: placeholder (CHANGEME)
+(SENTRY_DSN warning trimmed)
+FAIL — 2 errors, 1 warning.
+exit=1</code></pre>
+
+        <h2>What EnvGate does not catch</h2>
+        <ul>
+          <li><strong>It does not read Python code.</strong> Adding <code>SMTP_HOST = os.environ["SMTP_HOST"]</code> to <code>app/config.py</code> changed nothing in <code>envgate check</code>: no line mentioned <code>SMTP_HOST</code> and it still exited 0. Fields on a pydantic-settings model are invisible too. Only keys in the example file (and, for the CLI, in workflow <code>env:</code> blocks and Compose files) are checked.</li>
+          <li><strong>The CLI&rsquo;s <code>--from-env</code> counts an empty value as present.</strong> In the run above, <code>JWT_SECRET=""</code> passed. For empty secrets and fork pull requests, use Lite with <code>fail-on-empty: "true"</code> or the <code>conftest.py</code> check.</li>
+          <li><strong>Scan mode with no <code>.env</code> checks no values.</strong> In a clean checkout, plain <code>envgate check</code> printed <code>PASS — no violations.</code> with nothing set, because a missing sibling <code>.env</code> is not an error in scan mode. It still reported the workflow key missing from <code>.env.example</code>.</li>
+          <li><strong>It does not know how your project loads env.</strong> Neither tool knows whether you call <code>load_dotenv</code>, use pytest-dotenv, or rely on pydantic-settings. With a complete local <code>.env</code>, <code>envgate check</code> passed (<code>env: .env</code>) even though plain pytest without a loader still raised <code>KeyError</code>.</li>
+          <li><strong>Lite reads the job environment, not <code>.env</code>, unless you pass <code>env-file</code>.</strong> With a complete <code>.env</code> in the directory and nothing in the environment, Lite reported all three keys missing (<code>3 missing, 0 empty (of 3)</code>). That is correct for CI, but it means Lite is not a local check of your <code>.env</code> file.</li>
+          <li><strong>Some workflow file names are skipped.</strong> EnvGate 0.2.1 does not read <code>env:</code> blocks from workflows it treats as tooling (for example <code>build.yml</code>, <code>lock.yml</code>, or names containing <code>release</code> or <code>publish</code>). The sample used <code>test.yml</code>, which is read.</li>
+          <li><strong>Present is not correct.</strong> A non-empty <code>DATABASE_URL</code> that points at the wrong database passes every check on this page, and no type checks are done (pydantic-settings is the right tool for that).</li>
+        </ul>
+
+      </section>
+      <section class="cta-box" aria-label="EnvGate">
+        <h2>Want more than a missing-key check?</h2>
+        <p>The free <a href="https://github.com/ESS2292/envgate-action">EnvGate Lite GitHub Action</a> fails a CI job when a key from <code>.env.example</code> isn&rsquo;t set. The full <strong>EnvGate CLI</strong> also reports GitHub Actions and Compose keys missing from <code>.env.example</code>, flags placeholder and empty values, extra keys (optionally as errors), and a focused set of high-confidence secret shapes &mdash; locally or in any CI &mdash; with a JSON report and values always redacted.</p>
+        <p><strong>$19 one-time</strong> &middot; Node 18+ &middot; zero runtime dependencies &middot; MIT source included.</p>
+        <p><a class="cta-link" href="../index.html#checks">See what EnvGate checks &rarr;</a></p>
+      </section>
+      <section>
+        <h2>Related guides</h2>
+        <ul>
+          <li><a href="jest-vitest-process-env-undefined-in-ci.html">Jest or Vitest: <code>process.env</code> variable undefined in CI (the <code>.env</code> file is not loaded)</a></li>
+          <li><a href="github-actions-empty-secrets.html">GitHub Actions secret is empty: why and how to fail fast</a></li>
+          <li><a href="dotenv-vs-env-example.html">dotenv vs .env.example: keeping config in sync</a></li>
+          <li><a href="validate-env-against-env-example-in-ci.html">Validate .env against .env.example in CI</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <nav class="family-nav" aria-label="Other tools in this family">
+        <span class="family-label">Also:</span>
+          <a href="https://ess2292.github.io/envgate/" aria-current="page">EnvGate</a>
+          <a href="https://ess2292.github.io/runtimegate/">RuntimeGate</a>
+          <a href="https://ess2292.github.io/lockgate/">LockGate</a>
+          <a href="https://ess2292.github.io/servicegate/">ServiceGate</a>
+      </nav>
+<div class="footer-row">
+        <div>
+          EnvGate 0.2.1 by Emilio Straubel &middot; $19 one-time &middot; MIT source included &middot; no tracking
+        </div>
+        <div class="footer-links">
+          <a href="../index.html">Home</a>
+          <a href="index.html" aria-current="page">Guides</a>
+          <a href="../privacy.html">Privacy</a>
+          <a href="../terms.html">Terms</a>
+          <a href="https://github.com/ESS2292/envgate-action">Lite Action</a>
+          <a href="https://github.com/ESS2292/envgate-action/issues">Issues</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
